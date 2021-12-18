@@ -13,7 +13,7 @@ entries:
       title: Testing nbdev
       url: core.html
     - output: web,pdf
-      title: Displaying objects in notenooks
+      title: Displaying objects in notebooks
       url: display.html
     output: web
     title: gtbook

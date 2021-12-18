@@ -2,6 +2,6 @@
   "gtbook": {
     "Overview": "/",
     "Testing nbdev": "core.html",
-    "Displaying objects in notenooks": "display.html"
+    "Displaying objects in notebooks": "display.html"
   }
 }
