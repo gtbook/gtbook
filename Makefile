@@ -2,11 +2,11 @@
 SHELL := /bin/bash
 SRC = $(wildcard ./*.ipynb)
 
-all: nbdev_test docs
+all: gtbook docs
 
-nbdev_test: $(SRC)
+gtbook: $(SRC)
 	nbdev_build_lib
-	touch nbdev_test
+	touch gtbook
 
 sync:
 	nbdev_update_lib

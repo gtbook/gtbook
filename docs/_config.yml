@@ -1,7 +1,7 @@
-repository: dellaert/nbdev_test
+repository: dellaert/gtbook
 output: web
-topnav_title: nbdev_test
-site_title: nbdev_test
+topnav_title: gtbook
+site_title: gtbook
 company_name: Copyright (c) 2021, All rights reserved
 description: test of nbdev
 # Set to false to disable KaTeX math
@@ -63,7 +63,7 @@ plugins:
     - jekyll-remote-theme
     
 remote_theme: fastai/nbdev-jekyll-theme
-baseurl: /nbdev_test/
+baseurl: /gtbook/
 
 default_badges:
   colab: true

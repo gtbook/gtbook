@@ -13,6 +13,6 @@ entries:
       title: Testing nbdev
       url: core.html
     output: web
-    title: nbdev_test
+    title: gtbook
   output: web
   title: Sidebar
