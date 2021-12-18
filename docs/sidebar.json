@@ -1,6 +1,7 @@
 {
   "gtbook": {
     "Overview": "/",
-    "Testing nbdev": "core.html"
+    "Testing nbdev": "core.html",
+    "Displaying objects in notenooks": "display.html"
   }
 }
