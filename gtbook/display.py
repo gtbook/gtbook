@@ -5,12 +5,14 @@ __all__ = ['show']
 # Cell
 import graphviz
 
+
 # Cell
 class show(graphviz.Source):
     """ Display an object with a dot method as a graph."""
+
     def __init__(self, obj):
         """Construct from object with 'dot' method."""
         # This small class takes an object, calls its dot function, and uses the
         # resulting string to initialize a graphviz.Source instance. This in turn
         # has a _repr_mimebundle_ method, which then renders it in the notebook.
-        super().__init__(obj.dot(False))
+        super().__init__(obj.dot())

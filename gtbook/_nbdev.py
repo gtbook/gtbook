@@ -2,11 +2,12 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"say_hello": "00_core.ipynb",
-         "HelloSayer": "00_core.ipynb",
+index = {"P": "discrete.ipynb",
+         "DiscretePrior": "discrete.ipynb",
+         "V": "discrete.ipynb",
          "show": "display.ipynb"}
 
-modules = ["core.py",
+modules = ["discrete.py",
            "display.py"]
 
 doc_url = "https://dellaert.github.io/gtbook/"

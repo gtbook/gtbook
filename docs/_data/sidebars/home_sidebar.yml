@@ -10,8 +10,8 @@ entries:
       title: Overview
       url: /
     - output: web,pdf
-      title: Testing nbdev
-      url: core.html
+      title: Title
+      url: discrete.html
     - output: web,pdf
       title: Displaying objects in notebooks
       url: display.html
