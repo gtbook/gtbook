@@ -2,8 +2,8 @@ repository: dellaert/gtbook
 output: web
 topnav_title: gtbook
 site_title: gtbook
-company_name: Copyright (c) 2021, All rights reserved
-description: test of nbdev
+company_name: Frank Dellaert
+description: An nbdev powered toolbox for Frank and Seth's robotics book.
 # Set to false to disable KaTeX math
 use_math: true
 # Add Google analytics id if you have one and want to use it here
