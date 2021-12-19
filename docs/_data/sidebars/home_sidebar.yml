@@ -10,7 +10,7 @@ entries:
       title: Overview
       url: /
     - output: web,pdf
-      title: Title
+      title: Utilities for Discrete Inference
       url: discrete.html
     - output: web,pdf
       title: Displaying objects in notebooks
