@@ -27,7 +27,6 @@ def P(*args):
         dks.push_back(key)
     return dks
 
-
 # Cell
 def DiscretePrior(key: int, pmf: str):
     """ A prior on a discrete variable.
