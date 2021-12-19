@@ -7,7 +7,7 @@
 In the book chapters, we should have a cell that fetches the latest version using pip:
 
 ```bash
-    %pip install -q -U gtbook
+%pip install -q -U gtbook
 ```
 
 The above automatically installs other libraries on colab, e.g., gtsam and plotly.
@@ -15,16 +15,20 @@ The above automatically installs other libraries on colab, e.g., gtsam and plotl
 You also needs a cell that imports what you need in a particular section, for example:
 
 ```python
-    from gtbook.display import show
-    from gtbook.discrete import P, DiscretePrior, V
+from gtbook.display import show
+from gtbook.discrete import P, DiscretePrior, V
 ```
 Further usage examples of these and more functions are given in the module documentation itself.
 
 ## Notes for development
+
 > Mostly for Frank as he adds to the library.
 
 - *Needs* `pip3 install -U nbdev`, not conda (has old version)
 - just do 'make' after changing any notebook.
 - `pip install -e .` for local install for test purposes.
 
-To release a new version:- nbdev_bump_version- make release
+To release a new version:
+
+- nbdev_bump_version
+- make release

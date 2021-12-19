@@ -43,7 +43,7 @@ nb_path: "index.ipynb"
 <p>The above automatically installs other libraries on colab, e.g., gtsam and plotly.</p>
 <p>You also needs a cell that imports what you need in a particular section, for example:</p>
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gtbook.display</span> <span class="kn">import</span> <span class="n">show</span>
-    <span class="kn">from</span> <span class="nn">gtbook.discrete</span> <span class="kn">import</span> <span class="n">P</span><span class="p">,</span> <span class="n">DiscretePrior</span><span class="p">,</span> <span class="n">V</span>
+<span class="kn">from</span> <span class="nn">gtbook.discrete</span> <span class="kn">import</span> <span class="n">P</span><span class="p">,</span> <span class="n">DiscretePrior</span><span class="p">,</span> <span class="n">V</span>
 </pre></div>
 <p>Further usage examples of these and more functions are given in the module documentation itself.</p>
 
@@ -59,7 +59,17 @@ nb_path: "index.ipynb"
 <li>just do 'make' after changing any notebook.</li>
 <li><code>pip install -e .</code> for local install for test purposes.</li>
 </ul>
-<p>To release a new version:- nbdev_bump_version- make release</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>To release a new version:</p>
+<ul>
+<li>nbdev_bump_version</li>
+<li>make release</li>
+</ul>
 
 </div>
 </div>
