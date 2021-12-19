@@ -31,57 +31,42 @@ nb_path: "index.ipynb"
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Notes-while-installing">Notes while installing<a class="anchor-link" href="#Notes-while-installing"> </a></h2><ul>
-<li><em>Needs</em> <code>pip3 install -U nbdev</code>, not conda (has old version)</li>
-<li>just do 'make' after changing any notebook.</li>
-</ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Install">Install<a class="anchor-link" href="#Install"> </a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>pip install gtbook</code></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="How-to-use">How to use<a class="anchor-link" href="#How-to-use"> </a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Fill me in please! Don't forget code examples:</p>
+<p>In the book chapters, we should have a cell that fetches the latest version using pip:</p>
+
+<pre><code>%pip install -q -U gtbook
+
+</code></pre>
+<p>and a cell that imports what you need in a particular section, for example:</p>
+
+<pre><code>from gtbook.display import show
+from gtbook.discrete import P, DiscretePrior, V
+
+</code></pre>
+<p>Further usage examples of these and more functions are given in the module documentation itself.</p>
 
 </div>
 </div>
 </div>
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Notes-for-development">Notes for development<a class="anchor-link" href="#Notes-for-development"> </a></h2><blockquote><p>Mostly for Frank as he adds to the library.</p>
+</blockquote>
+<ul>
+<li><em>Needs</em> <code>pip3 install -U nbdev</code>, not conda (has old version)</li>
+<li>just do 'make' after changing any notebook.</li>
+<li><code>pip install -e .</code> for local install for test purposes.</li>
+</ul>
+<p>To release a new version:- nbdev_bump_version- make release</p>
 
 </div>
-    {% endraw %}
-
+</div>
+</div>
 </div>
  
 
