@@ -1,0 +1,32 @@
+package:
+  name: gtbook
+  version: 0.0.2
+source:
+  sha256: 0e9645bdc8bd7344a7f70ea6d3e1664e4c1a77232bab73b438918bcdb2a4ef16
+  url: https://files.pythonhosted.org/packages/28/87/b042b29370a57166ba4909ef54bc54ebd75cac2eff24869519de928d439b/gtbook-0.0.2.tar.gz
+about:
+  dev_url: https://dellaert.github.io
+  doc_url: https://dellaert.github.io
+  home: https://dellaert.github.io
+  license: Apache Software
+  license_family: APACHE
+  summary: test of nbdev
+build:
+  noarch: python
+  number: '0'
+  script: '{{ PYTHON }} -m pip install . -vv'
+extra:
+  recipe-maintainers:
+  - dellaert
+requirements:
+  host:
+  - pip
+  - python
+  - packaging
+  run:
+  - pip
+  - python
+  - packaging
+test:
+  imports:
+  - gtbook
