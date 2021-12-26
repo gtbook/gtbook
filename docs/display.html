@@ -29,6 +29,13 @@ nb_path: "display.ipynb"
 </div>
     {% endraw %}
 
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Showing-graphs">Showing graphs<a class="anchor-link" href="#Showing-graphs"> </a></h2><p>For showing graphs, Graphviz and its python wrapper need to be installed. I did that with <code>conda install python-graphviz</code> which also installs graphviz, but these are installed by default on Google's colabs.</p>
+
+</div>
+</div>
+</div>
     {% raw %}
     
 <div class="cell border-box-sizing code_cell rendered">
@@ -36,6 +43,13 @@ nb_path: "display.ipynb"
 </div>
     {% endraw %}
 
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Some GTSAM objects have a <code>dot</code> method, but notebooks cannot render this. We use a trick, by the following small class, inherting from <code>graphviz.Source</code>:</p>
+
+</div>
+</div>
+</div>
     {% raw %}
     
 <div class="cell border-box-sizing code_cell rendered">
@@ -47,7 +61,7 @@ nb_path: "display.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="show" class="doc_header"><code>class</code> <code>show</code><a href="https://github.com/dellaert/gtbook/tree/master/gtbook/display.py#L10" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>show</code>(<strong><code>obj</code></strong>) :: <code>Source</code></p>
+<h2 id="show" class="doc_header"><code>class</code> <code>show</code><a href="https://github.com/dellaert/gtbook/tree/master/gtbook/display.py#L10" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>show</code>(<strong><code>obj</code></strong>, <strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>) :: <code>Source</code></p>
 </blockquote>
 <p>Display an object with a dot method as a graph.</p>
 
@@ -64,6 +78,871 @@ nb_path: "display.ipynb"
     {% raw %}
     
 <div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">gtsam</span> <span class="kn">import</span> <span class="n">DiscreteBayesNet</span>
+<span class="kn">from</span> <span class="nn">gtbook.discrete</span> <span class="kn">import</span> <span class="n">P</span>
+
+<span class="n">Asia</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">Smoking</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">Tuberculosis</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">LungCancer</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">Either</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">bayesNet</span> <span class="o">=</span> <span class="n">DiscreteBayesNet</span><span class="p">()</span>
+<span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Asia</span><span class="p">,</span> <span class="n">P</span><span class="p">(),</span> <span class="s2">&quot;99/1&quot;</span><span class="p">)</span>
+<span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Smoking</span><span class="p">,</span> <span class="n">P</span><span class="p">(),</span> <span class="s2">&quot;50/50&quot;</span><span class="p">)</span>
+<span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Tuberculosis</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="n">Asia</span><span class="p">),</span> <span class="s2">&quot;99/1 95/5&quot;</span><span class="p">)</span>
+<span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LungCancer</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="n">Smoking</span><span class="p">),</span> <span class="s2">&quot;99/1 90/10&quot;</span><span class="p">)</span>
+<span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Either</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="n">Tuberculosis</span><span class="p">,</span> <span class="n">LungCancer</span><span class="p">),</span> <span class="s2">&quot;F T T T&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show</span><span class="p">(</span><span class="n">bayesNet</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_svg output_subarea output_execute_result">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.50.0 (0)
+ -->
+<!-- Title: G Pages: 1 -->
+<svg width="134pt" height="188pt"
+ viewBox="0.00 0.00 134.00 188.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 184)">
+<title>G</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-184 130,-184 130,4 -4,4"/>
+<!-- 0 -->
+<g id="node1" class="node">
+<title>0</title>
+<ellipse fill="none" stroke="black" cx="27" cy="-162" rx="27" ry="18"/>
+<text text-anchor="middle" x="27" y="-158.3" font-family="Times,serif" font-size="14.00">0</text>
+</g>
+<!-- 2 -->
+<g id="node2" class="node">
+<title>2</title>
+<ellipse fill="none" stroke="black" cx="27" cy="-90" rx="27" ry="18"/>
+<text text-anchor="middle" x="27" y="-86.3" font-family="Times,serif" font-size="14.00">2</text>
+</g>
+<!-- 0&#45;&gt;2 -->
+<g id="edge1" class="edge">
+<title>0&#45;&gt;2</title>
+<path fill="none" stroke="black" d="M27,-143.7C27,-135.98 27,-126.71 27,-118.11"/>
+<polygon fill="black" stroke="black" points="30.5,-118.1 27,-108.1 23.5,-118.1 30.5,-118.1"/>
+</g>
+<!-- 4 -->
+<g id="node5" class="node">
+<title>4</title>
+<ellipse fill="none" stroke="black" cx="63" cy="-18" rx="27" ry="18"/>
+<text text-anchor="middle" x="63" y="-14.3" font-family="Times,serif" font-size="14.00">4</text>
+</g>
+<!-- 2&#45;&gt;4 -->
+<g id="edge3" class="edge">
+<title>2&#45;&gt;4</title>
+<path fill="none" stroke="black" d="M35.35,-72.76C39.71,-64.28 45.15,-53.71 50.04,-44.2"/>
+<polygon fill="black" stroke="black" points="53.23,-45.64 54.7,-35.15 47.01,-42.44 53.23,-45.64"/>
+</g>
+<!-- 1 -->
+<g id="node3" class="node">
+<title>1</title>
+<ellipse fill="none" stroke="black" cx="99" cy="-162" rx="27" ry="18"/>
+<text text-anchor="middle" x="99" y="-158.3" font-family="Times,serif" font-size="14.00">1</text>
+</g>
+<!-- 3 -->
+<g id="node4" class="node">
+<title>3</title>
+<ellipse fill="none" stroke="black" cx="99" cy="-90" rx="27" ry="18"/>
+<text text-anchor="middle" x="99" y="-86.3" font-family="Times,serif" font-size="14.00">3</text>
+</g>
+<!-- 1&#45;&gt;3 -->
+<g id="edge2" class="edge">
+<title>1&#45;&gt;3</title>
+<path fill="none" stroke="black" d="M99,-143.7C99,-135.98 99,-126.71 99,-118.11"/>
+<polygon fill="black" stroke="black" points="102.5,-118.1 99,-108.1 95.5,-118.1 102.5,-118.1"/>
+</g>
+<!-- 3&#45;&gt;4 -->
+<g id="edge4" class="edge">
+<title>3&#45;&gt;4</title>
+<path fill="none" stroke="black" d="M90.65,-72.76C86.29,-64.28 80.85,-53.71 75.96,-44.2"/>
+<polygon fill="black" stroke="black" points="78.99,-42.44 71.3,-35.15 72.77,-45.64 78.99,-42.44"/>
+</g>
+</g>
+</svg>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can, however, create our own formatter in python, and pass it as an optional argument:</p>
+
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">domain</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Asia&quot;</span><span class="p">,</span> <span class="s2">&quot;Smoking&quot;</span><span class="p">,</span> <span class="s2">&quot;Tuberculosis&quot;</span><span class="p">,</span> <span class="s2">&quot;LungCancer&quot;</span><span class="p">,</span> <span class="s2">&quot;Either&quot;</span><span class="p">]</span>
+<span class="n">keyFormatter</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">key</span> <span class="p">:</span> <span class="n">domain</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+<span class="n">show</span><span class="p">(</span><span class="n">bayesNet</span><span class="p">,</span> <span class="n">keyFormatter</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_svg output_subarea output_execute_result">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.50.0 (0)
+ -->
+<!-- Title: G Pages: 1 -->
+<svg width="252pt" height="188pt"
+ viewBox="0.00 0.00 252.09 188.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 184)">
+<title>G</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-184 248.09,-184 248.09,4 -4,4"/>
+<!-- Asia -->
+<g id="node1" class="node">
+<title>Asia</title>
+<ellipse fill="none" stroke="black" cx="57.19" cy="-162" rx="27.1" ry="18"/>
+<text text-anchor="middle" x="57.19" y="-158.3" font-family="Times,serif" font-size="14.00">Asia</text>
+</g>
+<!-- Tuberculosis -->
+<g id="node2" class="node">
+<title>Tuberculosis</title>
+<ellipse fill="none" stroke="black" cx="57.19" cy="-90" rx="57.39" ry="18"/>
+<text text-anchor="middle" x="57.19" y="-86.3" font-family="Times,serif" font-size="14.00">Tuberculosis</text>
+</g>
+<!-- Asia&#45;&gt;Tuberculosis -->
+<g id="edge1" class="edge">
+<title>Asia&#45;&gt;Tuberculosis</title>
+<path fill="none" stroke="black" d="M57.19,-143.7C57.19,-135.98 57.19,-126.71 57.19,-118.11"/>
+<polygon fill="black" stroke="black" points="60.7,-118.1 57.19,-108.1 53.7,-118.1 60.7,-118.1"/>
+</g>
+<!-- Either -->
+<g id="node5" class="node">
+<title>Either</title>
+<ellipse fill="none" stroke="black" cx="122.19" cy="-18" rx="33.29" ry="18"/>
+<text text-anchor="middle" x="122.19" y="-14.3" font-family="Times,serif" font-size="14.00">Either</text>
+</g>
+<!-- Tuberculosis&#45;&gt;Either -->
+<g id="edge3" class="edge">
+<title>Tuberculosis&#45;&gt;Either</title>
+<path fill="none" stroke="black" d="M72.6,-72.41C81.01,-63.35 91.56,-51.99 100.77,-42.08"/>
+<polygon fill="black" stroke="black" points="103.55,-44.22 107.79,-34.51 98.42,-39.46 103.55,-44.22"/>
+</g>
+<!-- Smoking -->
+<g id="node3" class="node">
+<title>Smoking</title>
+<ellipse fill="none" stroke="black" cx="188.19" cy="-162" rx="43.59" ry="18"/>
+<text text-anchor="middle" x="188.19" y="-158.3" font-family="Times,serif" font-size="14.00">Smoking</text>
+</g>
+<!-- LungCancer -->
+<g id="node4" class="node">
+<title>LungCancer</title>
+<ellipse fill="none" stroke="black" cx="188.19" cy="-90" rx="55.79" ry="18"/>
+<text text-anchor="middle" x="188.19" y="-86.3" font-family="Times,serif" font-size="14.00">LungCancer</text>
+</g>
+<!-- Smoking&#45;&gt;LungCancer -->
+<g id="edge2" class="edge">
+<title>Smoking&#45;&gt;LungCancer</title>
+<path fill="none" stroke="black" d="M188.19,-143.7C188.19,-135.98 188.19,-126.71 188.19,-118.11"/>
+<polygon fill="black" stroke="black" points="191.7,-118.1 188.19,-108.1 184.7,-118.1 191.7,-118.1"/>
+</g>
+<!-- LungCancer&#45;&gt;Either -->
+<g id="edge4" class="edge">
+<title>LungCancer&#45;&gt;Either</title>
+<path fill="none" stroke="black" d="M172.55,-72.41C164.01,-63.35 153.3,-51.99 143.95,-42.08"/>
+<polygon fill="black" stroke="black" points="146.23,-39.39 136.82,-34.51 141.13,-44.19 146.23,-39.39"/>
+</g>
+</g>
+</svg>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It also works for factor graphs, as illustrated below:</p>
+
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">gtsam</span> <span class="kn">import</span> <span class="n">DiscreteFactorGraph</span>
+<span class="n">fg</span> <span class="o">=</span> <span class="n">DiscreteFactorGraph</span><span class="p">(</span><span class="n">bayesNet</span><span class="p">)</span>
+<span class="n">show</span><span class="p">(</span><span class="n">fg</span><span class="p">,</span> <span class="n">keyFormatter</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_svg output_subarea output_execute_result">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.50.0 (0)
+ -->
+<!-- Pages: 1 -->
+<svg width="336pt" height="156pt"
+ viewBox="0.00 0.00 336.09 155.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 151.6)">
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-151.6 332.09,-151.6 332.09,4 -4,4"/>
+<!-- var0 -->
+<g id="node1" class="node">
+<title>var0</title>
+<ellipse fill="none" stroke="black" cx="57.19" cy="-57.6" rx="27.1" ry="18"/>
+<text text-anchor="middle" x="57.19" y="-53.9" font-family="Times,serif" font-size="14.00">Asia</text>
+</g>
+<!-- factor0 -->
+<g id="node6" class="node">
+<title>factor0</title>
+<ellipse fill="black" stroke="black" cx="57.19" cy="-1.8" rx="1.8" ry="1.8"/>
+</g>
+<!-- var0&#45;&#45;factor0 -->
+<g id="edge1" class="edge">
+<title>var0&#45;&#45;factor0</title>
+<path fill="none" stroke="black" d="M57.19,-39.58C57.19,-25.79 57.19,-7.97 57.19,-3.73"/>
+</g>
+<!-- var1 -->
+<g id="node2" class="node">
+<title>var1</title>
+<ellipse fill="none" stroke="black" cx="272.19" cy="-57.6" rx="43.59" ry="18"/>
+<text text-anchor="middle" x="272.19" y="-53.9" font-family="Times,serif" font-size="14.00">Smoking</text>
+</g>
+<!-- factor1 -->
+<g id="node7" class="node">
+<title>factor1</title>
+<ellipse fill="black" stroke="black" cx="272.19" cy="-1.8" rx="1.8" ry="1.8"/>
+</g>
+<!-- var1&#45;&#45;factor1 -->
+<g id="edge2" class="edge">
+<title>var1&#45;&#45;factor1</title>
+<path fill="none" stroke="black" d="M272.19,-39.58C272.19,-25.79 272.19,-7.97 272.19,-3.73"/>
+</g>
+<!-- var2 -->
+<g id="node3" class="node">
+<title>var2</title>
+<ellipse fill="none" stroke="black" cx="57.19" cy="-129.6" rx="57.39" ry="18"/>
+<text text-anchor="middle" x="57.19" y="-125.9" font-family="Times,serif" font-size="14.00">Tuberculosis</text>
+</g>
+<!-- var2&#45;&#45;var0 -->
+<g id="edge3" class="edge">
+<title>var2&#45;&#45;var0</title>
+<path fill="none" stroke="black" d="M57.19,-111.3C57.19,-100.45 57.19,-86.52 57.19,-75.7"/>
+</g>
+<!-- factor4 -->
+<g id="node8" class="node">
+<title>factor4</title>
+<ellipse fill="black" stroke="black" cx="165.19" cy="-57.6" rx="1.8" ry="1.8"/>
+</g>
+<!-- var2&#45;&#45;factor4 -->
+<g id="edge6" class="edge">
+<title>var2&#45;&#45;factor4</title>
+<path fill="none" stroke="black" d="M81.16,-113.06C110.5,-94.05 157.16,-63.81 164.27,-59.2"/>
+</g>
+<!-- var3 -->
+<g id="node4" class="node">
+<title>var3</title>
+<ellipse fill="none" stroke="black" cx="272.19" cy="-129.6" rx="55.79" ry="18"/>
+<text text-anchor="middle" x="272.19" y="-125.9" font-family="Times,serif" font-size="14.00">LungCancer</text>
+</g>
+<!-- var3&#45;&#45;var1 -->
+<g id="edge4" class="edge">
+<title>var3&#45;&#45;var1</title>
+<path fill="none" stroke="black" d="M272.19,-111.3C272.19,-100.45 272.19,-86.52 272.19,-75.7"/>
+</g>
+<!-- var3&#45;&#45;factor4 -->
+<g id="edge7" class="edge">
+<title>var3&#45;&#45;factor4</title>
+<path fill="none" stroke="black" d="M248.71,-113.24C219.68,-94.24 173.2,-63.84 166.11,-59.2"/>
+</g>
+<!-- var4 -->
+<g id="node5" class="node">
+<title>var4</title>
+<ellipse fill="none" stroke="black" cx="165.19" cy="-129.6" rx="33.29" ry="18"/>
+<text text-anchor="middle" x="165.19" y="-125.9" font-family="Times,serif" font-size="14.00">Either</text>
+</g>
+<!-- var4&#45;&#45;factor4 -->
+<g id="edge5" class="edge">
+<title>var4&#45;&#45;factor4</title>
+<path fill="none" stroke="black" d="M165.19,-111.3C165.19,-92.51 165.19,-64.5 165.19,-59.41"/>
+</g>
+</g>
+</svg>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Factor graph graphviz rendering can be customized even more, through a DotWriter object. For example, the following displays the "primamry constraint graph":</p>
+
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">gtsam</span> <span class="kn">import</span> <span class="n">DotWriter</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">DotWriter</span><span class="p">(</span><span class="n">figureWidthInches</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">figureHeightInches</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                   <span class="n">plotFactorPoints</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">binaryEdges</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">show</span><span class="p">(</span><span class="n">fg</span><span class="p">,</span> <span class="n">keyFormatter</span><span class="p">,</span> <span class="n">writer</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_svg output_subarea output_execute_result">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.50.0 (0)
+ -->
+<!-- Pages: 1 -->
+<svg width="228pt" height="260pt"
+ viewBox="0.00 0.00 227.74 260.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 256)">
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-256 223.74,-256 223.74,4 -4,4"/>
+<!-- var0 -->
+<g id="node1" class="node">
+<title>var0</title>
+<ellipse fill="none" stroke="black" cx="162.55" cy="-234" rx="27.1" ry="18"/>
+<text text-anchor="middle" x="162.55" y="-230.3" font-family="Times,serif" font-size="14.00">Asia</text>
+</g>
+<!-- var2 -->
+<g id="node3" class="node">
+<title>var2</title>
+<ellipse fill="none" stroke="black" cx="162.55" cy="-162" rx="57.39" ry="18"/>
+<text text-anchor="middle" x="162.55" y="-158.3" font-family="Times,serif" font-size="14.00">Tuberculosis</text>
+</g>
+<!-- var0&#45;&#45;var2 -->
+<g id="edge1" class="edge">
+<title>var0&#45;&#45;var2</title>
+<path fill="none" stroke="black" d="M162.55,-215.7C162.55,-204.85 162.55,-190.92 162.55,-180.1"/>
+</g>
+<!-- var1 -->
+<g id="node2" class="node">
+<title>var1</title>
+<ellipse fill="none" stroke="black" cx="43.55" cy="-162" rx="43.59" ry="18"/>
+<text text-anchor="middle" x="43.55" y="-158.3" font-family="Times,serif" font-size="14.00">Smoking</text>
+</g>
+<!-- var3 -->
+<g id="node4" class="node">
+<title>var3</title>
+<ellipse fill="none" stroke="black" cx="78.55" cy="-90" rx="55.79" ry="18"/>
+<text text-anchor="middle" x="78.55" y="-86.3" font-family="Times,serif" font-size="14.00">LungCancer</text>
+</g>
+<!-- var1&#45;&#45;var3 -->
+<g id="edge2" class="edge">
+<title>var1&#45;&#45;var3</title>
+<path fill="none" stroke="black" d="M52.02,-144.05C57.44,-133.21 64.45,-119.18 69.91,-108.28"/>
+</g>
+<!-- var2&#45;&#45;var3 -->
+<g id="edge4" class="edge">
+<title>var2&#45;&#45;var3</title>
+<path fill="none" stroke="black" d="M143.06,-144.76C129.49,-133.46 111.47,-118.44 97.92,-107.15"/>
+</g>
+<!-- var4 -->
+<g id="node5" class="node">
+<title>var4</title>
+<ellipse fill="none" stroke="black" cx="120.55" cy="-18" rx="33.29" ry="18"/>
+<text text-anchor="middle" x="120.55" y="-14.3" font-family="Times,serif" font-size="14.00">Either</text>
+</g>
+<!-- var2&#45;&#45;var4 -->
+<g id="edge3" class="edge">
+<title>var2&#45;&#45;var4</title>
+<path fill="none" stroke="black" d="M159.95,-144.01C156.95,-125.9 151.4,-96.53 143.55,-72 139.57,-59.58 133.7,-46.11 128.89,-35.85"/>
+</g>
+<!-- var3&#45;&#45;var4 -->
+<g id="edge5" class="edge">
+<title>var3&#45;&#45;var4</title>
+<path fill="none" stroke="black" d="M88.71,-72.05C95.41,-60.89 104.14,-46.34 110.76,-35.31"/>
+</g>
+</g>
+</svg>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Markdown">Markdown<a class="anchor-link" href="#Markdown"> </a></h2><p>Markdown can be rendered natively, like so:</p>
+
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">bayesNet</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea output_execute_result">
+<p><code>DiscreteBayesNet</code> of size 5</p>
+<p>$P(0)$:
+|0|value|
+|:-:|:-:|
+|0|0.99|
+|1|0.01|</p>
+<p>$P(1)$:
+|1|value|
+|:-:|:-:|
+|0|0.5|
+|1|0.5|</p>
+<p>$P(2|0)$:
+|0|0|1|
+|:-:|:-:|:-:|
+|0|0.99|0.01|
+|1|0.95|0.05|</p>
+<p>$P(3|1)$:
+|1|0|1|
+|:-:|:-:|:-:|
+|0|0.99|0.01|
+|1|0.9|0.1|</p>
+<p>$P(4|2,3)$:
+|2|3|0|1|
+|:-:|:-:|:-:|:-:|
+|0|0|1|0|
+|0|1|0|1|
+|1|0|0|1|
+|1|1|0|1|</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>However, to provide optional arguments, we have to resort to a similar trick:</p>
+
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h2 id="pretty" class="doc_header"><code>class</code> <code>pretty</code><a href="https://github.com/dellaert/gtbook/tree/master/gtbook/display.py#L26" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>pretty</code>(<strong><code>obj</code></strong>, <strong>*<code>args</code></strong>)</p>
+</blockquote>
+<p>Render an object as markdown with optional arguments.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pretty</span><span class="p">(</span><span class="n">bayesNet</span><span class="p">,</span> <span class="n">keyFormatter</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea output_execute_result">
+<p><code>DiscreteBayesNet</code> of size 5</p>
+<p>$P(Asia)$:
+|Asia|value|
+|:-:|:-:|
+|0|0.99|
+|1|0.01|</p>
+<p>$P(Smoking)$:
+|Smoking|value|
+|:-:|:-:|
+|0|0.5|
+|1|0.5|</p>
+<p>$P(Tuberculosis|Asia)$:
+|Asia|0|1|
+|:-:|:-:|:-:|
+|0|0.99|0.01|
+|1|0.95|0.05|</p>
+<p>$P(LungCancer|Smoking)$:
+|Smoking|0|1|
+|:-:|:-:|:-:|
+|0|0.99|0.01|
+|1|0.9|0.1|</p>
+<p>$P(Either|Tuberculosis,LungCancer)$:
+|Tuberculosis|LungCancer|0|1|
+|:-:|:-:|:-:|:-:|
+|0|0|1|0|
+|0|1|0|1|
+|1|0|0|1|
+|1|1|0|1|</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Factor graphs work as well:</p>
+
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">DiscreteFactorGraph</span><span class="p">()</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Asia</span><span class="p">,</span> <span class="n">Smoking</span><span class="p">,</span> <span class="s2">&quot;4 1 10 4&quot;</span><span class="p">)</span>
+<span class="n">pretty</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">keyFormatter</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea output_execute_result">
+<p><code>DiscreteFactorGraph</code> of size 1</p>
+<p>factor 0:
+|Asia|Smoking|value|
+|:-:|:-:|:-:|
+|0|0|4|
+|0|1|1|
+|1|0|10|
+|1|1|4|</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Domains">Domains<a class="anchor-link" href="#Domains"> </a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We also provide support for the <a href="/gtbook/discrete.html#Variables"><code>Variables</code></a> data structure:</p>
+
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">variables</span> <span class="o">=</span> <span class="n">Variables</span><span class="p">()</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">discrete</span><span class="p">(</span><span class="s2">&quot;Tuberculosis&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Yes&quot;</span><span class="p">,</span> <span class="s2">&quot;No&quot;</span><span class="p">])</span>
+<span class="n">L</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">discrete</span><span class="p">(</span><span class="s2">&quot;LungCancer&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Yes&quot;</span><span class="p">,</span> <span class="s2">&quot;No&quot;</span><span class="p">])</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">discrete</span><span class="p">(</span><span class="s2">&quot;Either&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Yes&quot;</span><span class="p">,</span> <span class="s2">&quot;No&quot;</span><span class="p">])</span>
+
+<span class="n">fragment</span> <span class="o">=</span> <span class="n">DiscreteBayesNet</span><span class="p">()</span>
+<span class="n">fragment</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">P</span><span class="p">(),</span> <span class="s2">&quot;99/1&quot;</span><span class="p">)</span>
+<span class="n">fragment</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">P</span><span class="p">(),</span> <span class="s2">&quot;50/50&quot;</span><span class="p">)</span>
+<span class="n">fragment</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">P</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">L</span><span class="p">),</span> <span class="s2">&quot;F T T T&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pretty</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">variables</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea output_execute_result">
+<p><code>DiscreteBayesNet</code> of size 3</p>
+<p>$P(Tuberculosis)$:
+|Tuberculosis|value|
+|:-:|:-:|
+|0|0.99|
+|1|0.01|</p>
+<p>$P(LungCancer)$:
+|LungCancer|value|
+|:-:|:-:|
+|0|0.5|
+|1|0.5|</p>
+<p>$P(Either|Tuberculosis,LungCancer)$:
+|Tuberculosis|LungCancer|0|1|
+|:-:|:-:|:-:|:-:|
+|0|0|1|0|
+|0|1|0|1|
+|1|0|0|1|
+|1|1|0|1|</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>And of course, showing a graph as well:</p>
+
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">variables</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_svg output_subarea output_execute_result">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.50.0 (0)
+ -->
+<!-- Title: G Pages: 1 -->
+<svg width="252pt" height="116pt"
+ viewBox="0.00 0.00 252.09 116.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 112)">
+<title>G</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-112 248.09,-112 248.09,4 -4,4"/>
+<!-- Tuberculosis -->
+<g id="node1" class="node">
+<title>Tuberculosis</title>
+<ellipse fill="none" stroke="black" cx="57.19" cy="-90" rx="57.39" ry="18"/>
+<text text-anchor="middle" x="57.19" y="-86.3" font-family="Times,serif" font-size="14.00">Tuberculosis</text>
+</g>
+<!-- Either -->
+<g id="node2" class="node">
+<title>Either</title>
+<ellipse fill="none" stroke="black" cx="122.19" cy="-18" rx="33.29" ry="18"/>
+<text text-anchor="middle" x="122.19" y="-14.3" font-family="Times,serif" font-size="14.00">Either</text>
+</g>
+<!-- Tuberculosis&#45;&gt;Either -->
+<g id="edge1" class="edge">
+<title>Tuberculosis&#45;&gt;Either</title>
+<path fill="none" stroke="black" d="M72.6,-72.41C81.01,-63.35 91.56,-51.99 100.77,-42.08"/>
+<polygon fill="black" stroke="black" points="103.55,-44.22 107.79,-34.51 98.42,-39.46 103.55,-44.22"/>
+</g>
+<!-- LungCancer -->
+<g id="node3" class="node">
+<title>LungCancer</title>
+<ellipse fill="none" stroke="black" cx="188.19" cy="-90" rx="55.79" ry="18"/>
+<text text-anchor="middle" x="188.19" y="-86.3" font-family="Times,serif" font-size="14.00">LungCancer</text>
+</g>
+<!-- LungCancer&#45;&gt;Either -->
+<g id="edge2" class="edge">
+<title>LungCancer&#45;&gt;Either</title>
+<path fill="none" stroke="black" d="M172.55,-72.41C164.01,-63.35 153.3,-51.99 143.95,-42.08"/>
+<polygon fill="black" stroke="black" points="146.23,-39.39 136.82,-34.51 141.13,-44.19 146.23,-39.39"/>
+</g>
+</g>
+</svg>
+
+</div>
+
+</div>
+
+</div>
+</div>
 
 </div>
     {% endraw %}

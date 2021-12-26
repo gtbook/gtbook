@@ -3,9 +3,12 @@
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
 index = {"P": "discrete.ipynb",
-         "DiscretePrior": "discrete.ipynb",
          "V": "discrete.ipynb",
-         "show": "display.ipynb"}
+         "DiscretePrior": "discrete.ipynb",
+         "Variables": "discrete.ipynb",
+         "DiscreteKey": "discrete.ipynb",
+         "show": "display.ipynb",
+         "pretty": "display.ipynb"}
 
 modules = ["discrete.py",
            "display.py"]
