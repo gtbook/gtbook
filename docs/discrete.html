@@ -38,170 +38,11 @@ nb_path: "discrete.ipynb"
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Helper-functions">Helper functions<a class="anchor-link" href="#Helper-functions"> </a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>It is currently very annoying to create a set of discrete keys. This is probably because we don't understand pybind11 fully yet. The following makes this easier:</p>
+<h2 id="DiscretePrior">DiscretePrior<a class="anchor-link" href="#DiscretePrior"> </a></h2><p>DiscretePrior is now built into GTSAM:</p>
 
 </div>
 </div>
 </div>
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4 id="P" class="doc_header"><code>P</code><a href="https://github.com/dellaert/gtbook/tree/master/gtbook/discrete.py#L12" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>P</code>(<strong>*<code>args</code></strong>)</p>
-</blockquote>
-<p>Create a DiscreteKeys instances from a variable number of DiscreteKey pairs.</p>
-<p>Discrete keys are represented as pairs in Python, with the first element the key and
-the second element the cardinality of the discrete variable. This function accepts a
-variable number of such pairs and creates a gtsam.DiscreteKeys instance.</p>
-<p>Returns:
-    DiscreteKeys: an instance of DiscreteKeys.</p>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">parents</span> <span class="o">=</span> <span class="n">P</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">parents</span><span class="p">))</span>
-<span class="k">assert</span> <span class="n">parents</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">==</span> <span class="mi">2</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>&lt;class &#39;gtsam.gtsam.DiscreteKeys&#39;&gt;
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>For creating assignments, we also have this little helper:</p>
-
-</div>
-</div>
-</div>
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4 id="V" class="doc_header"><code>V</code><a href="https://github.com/dellaert/gtbook/tree/master/gtbook/discrete.py#L29" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>V</code>(<strong><code>values</code></strong>)</p>
-</blockquote>
-<p>Convert a dictionary into a DiscreteValues instance.</p>
-<p>Args:
-    values (dict): A map from keys to values.</p>
-<p>Returns:
-    gtsam.DiscreteValues: an assignment to discrete variables usable by gtsam.</p>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-    {% endraw %}
-
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="DiscretePrior">DiscretePrior<a class="anchor-link" href="#DiscretePrior"> </a></h2><p>Not in GTSAM:</p>
-
-</div>
-</div>
-</div>
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4 id="DiscretePrior" class="doc_header"><code>DiscretePrior</code><a href="https://github.com/dellaert/gtbook/tree/master/gtbook/discrete.py#L47" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>DiscretePrior</code>(<strong><code>key</code></strong>:<code>int</code>, <strong><code>pmf</code></strong>:<code>str</code>)</p>
-</blockquote>
-<p>A prior on a discrete variable.</p>
-<p>This really just creates a gtsam.DiscreteConditional without parents.</p>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-    {% endraw %}
-
     {% raw %}
     
 <div class="cell border-box-sizing code_cell rendered">
@@ -210,7 +51,7 @@ variable number of such pairs and creates a gtsam.DiscreteKeys instance.</p>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">C</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span>  <span class="c1"># A key is an identifier and a cardinality</span>
-<span class="n">prior</span> <span class="o">=</span> <span class="n">DiscretePrior</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="s2">&quot;25/20/30/20/5&quot;</span><span class="p">)</span>
+<span class="n">prior</span> <span class="o">=</span> <span class="n">gtsam</span><span class="o">.</span><span class="n">DiscretePrior</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="s2">&quot;25/20/30/20/5&quot;</span><span class="p">)</span>
 <span class="k">assert</span> <span class="ow">not</span> <span class="n">prior</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
 
 <span class="kn">from</span> <span class="nn">gtbook.display</span> <span class="kn">import</span> <span class="n">show</span>
@@ -240,69 +81,69 @@ variable number of such pairs and creates a gtsam.DiscreteKeys instance.</p>
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 101)">
 <title>G</title>
 <polygon fill="white" stroke="transparent" points="-4,4 -4,-101 346,-101 346,4 -4,4"/>
-<!-- 0x600000270360 -->
+<!-- 0x600001ede460 -->
 <g id="node1" class="node">
-<title>0x600000270360</title>
+<title>0x600001ede460</title>
 <ellipse fill="none" stroke="black" cx="171" cy="-79" rx="18" ry="18"/>
 <text text-anchor="middle" x="171" y="-75.3" font-family="Times,serif" font-size="14.00">0</text>
 </g>
-<!-- 0x600000e7c0a0 -->
+<!-- 0x6000012d9360 -->
 <g id="node2" class="node">
-<title>0x600000e7c0a0</title>
+<title>0x6000012d9360</title>
 <polygon fill="none" stroke="black" points="54,-25 0,-25 0,0 54,0 54,-25"/>
 <text text-anchor="middle" x="27" y="-8.8" font-family="Times,serif" font-size="14.00">0.25</text>
 </g>
-<!-- 0x600000270360&#45;&gt;0x600000e7c0a0 -->
+<!-- 0x600001ede460&#45;&gt;0x6000012d9360 -->
 <g id="edge1" class="edge">
-<title>0x600000270360&#45;&gt;0x600000e7c0a0</title>
+<title>0x600001ede460&#45;&gt;0x6000012d9360</title>
 <path fill="none" stroke="black" d="M154.76,-70.73C132.39,-60.71 91.53,-42.4 62.03,-29.19"/>
 <polygon fill="black" stroke="black" points="63.44,-25.99 52.89,-25.1 60.58,-32.38 63.44,-25.99"/>
 </g>
-<!-- 0x600000e7c1c0 -->
+<!-- 0x6000012d9370 -->
 <g id="node3" class="node">
-<title>0x600000e7c1c0</title>
+<title>0x6000012d9370</title>
 <polygon fill="none" stroke="black" points="126,-25 72,-25 72,0 126,0 126,-25"/>
 <text text-anchor="middle" x="99" y="-8.8" font-family="Times,serif" font-size="14.00"> 0.2</text>
 </g>
-<!-- 0x600000270360&#45;&gt;0x600000e7c1c0 -->
+<!-- 0x600001ede460&#45;&gt;0x6000012d9370 -->
 <g id="edge2" class="edge">
-<title>0x600000270360&#45;&gt;0x600000e7c1c0</title>
+<title>0x600001ede460&#45;&gt;0x6000012d9370</title>
 <path fill="none" stroke="black" d="M157.79,-66.17C147.14,-56.62 131.95,-43.02 119.69,-32.03"/>
 <polygon fill="black" stroke="black" points="121.91,-29.32 112.12,-25.26 117.24,-34.53 121.91,-29.32"/>
 </g>
-<!-- 0x600000e7c1d0 -->
+<!-- 0x6000012d9380 -->
 <g id="node4" class="node">
-<title>0x600000e7c1d0</title>
+<title>0x6000012d9380</title>
 <polygon fill="none" stroke="black" points="198,-25 144,-25 144,0 198,0 198,-25"/>
 <text text-anchor="middle" x="171" y="-8.8" font-family="Times,serif" font-size="14.00"> 0.3</text>
 </g>
-<!-- 0x600000270360&#45;&gt;0x600000e7c1d0 -->
+<!-- 0x600001ede460&#45;&gt;0x6000012d9380 -->
 <g id="edge3" class="edge">
-<title>0x600000270360&#45;&gt;0x600000e7c1d0</title>
+<title>0x600001ede460&#45;&gt;0x6000012d9380</title>
 <path fill="none" stroke="black" d="M171,-60.72C171,-52.93 171,-43.65 171,-35.39"/>
 <polygon fill="black" stroke="black" points="174.5,-35.32 171,-25.32 167.5,-35.32 174.5,-35.32"/>
 </g>
-<!-- 0x600000e7c1e0 -->
+<!-- 0x6000012d9390 -->
 <g id="node5" class="node">
-<title>0x600000e7c1e0</title>
+<title>0x6000012d9390</title>
 <polygon fill="none" stroke="black" points="270,-25 216,-25 216,0 270,0 270,-25"/>
 <text text-anchor="middle" x="243" y="-8.8" font-family="Times,serif" font-size="14.00"> 0.2</text>
 </g>
-<!-- 0x600000270360&#45;&gt;0x600000e7c1e0 -->
+<!-- 0x600001ede460&#45;&gt;0x6000012d9390 -->
 <g id="edge4" class="edge">
-<title>0x600000270360&#45;&gt;0x600000e7c1e0</title>
+<title>0x600001ede460&#45;&gt;0x6000012d9390</title>
 <path fill="none" stroke="black" d="M184.21,-66.17C194.86,-56.62 210.05,-43.02 222.31,-32.03"/>
 <polygon fill="black" stroke="black" points="224.76,-34.53 229.88,-25.26 220.09,-29.32 224.76,-34.53"/>
 </g>
-<!-- 0x600000e7c1f0 -->
+<!-- 0x6000012d93a0 -->
 <g id="node6" class="node">
-<title>0x600000e7c1f0</title>
+<title>0x6000012d93a0</title>
 <polygon fill="none" stroke="black" points="342,-25 288,-25 288,0 342,0 342,-25"/>
 <text text-anchor="middle" x="315" y="-8.8" font-family="Times,serif" font-size="14.00">0.05</text>
 </g>
-<!-- 0x600000270360&#45;&gt;0x600000e7c1f0 -->
+<!-- 0x600001ede460&#45;&gt;0x6000012d93a0 -->
 <g id="edge5" class="edge">
-<title>0x600000270360&#45;&gt;0x600000e7c1f0</title>
+<title>0x600001ede460&#45;&gt;0x6000012d93a0</title>
 <path fill="none" stroke="black" d="M187.24,-70.73C209.61,-60.71 250.47,-42.4 279.97,-29.19"/>
 <polygon fill="black" stroke="black" points="281.42,-32.38 289.11,-25.1 278.56,-25.99 281.42,-32.38"/>
 </g>
@@ -326,7 +167,7 @@ variable number of such pairs and creates a gtsam.DiscreteKeys instance.</p>
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">prior_probability_for_3</span> <span class="o">=</span> <span class="n">prior</span><span class="p">(</span><span class="n">V</span><span class="p">({</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">}))</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">prior_probability_for_3</span> <span class="o">=</span> <span class="n">prior</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">prior_probability_for_3</span> <span class="o">==</span> <span class="mf">0.2</span>
 </pre></div>
 
@@ -339,7 +180,7 @@ variable number of such pairs and creates a gtsam.DiscreteKeys instance.</p>
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Domains">Domains<a class="anchor-link" href="#Domains"> </a></h2>
+<h2 id="Variables">Variables<a class="anchor-link" href="#Variables"> </a></h2>
 </div>
 </div>
 </div>
@@ -361,7 +202,7 @@ variable number of such pairs and creates a gtsam.DiscreteKeys instance.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="Variables" class="doc_header"><code>class</code> <code>Variables</code><a href="https://github.com/dellaert/gtbook/tree/master/gtbook/discrete.py#L61" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>Variables</code>()</p>
+<h2 id="Variables" class="doc_header"><code>class</code> <code>Variables</code><a href="https://github.com/dellaert/gtbook/tree/master/gtbook/discrete.py#L16" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>Variables</code>()</p>
 </blockquote>
 <p>A problem domain for discrete variables.</p>
 

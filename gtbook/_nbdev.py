@@ -2,10 +2,7 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"P": "discrete.ipynb",
-         "V": "discrete.ipynb",
-         "DiscretePrior": "discrete.ipynb",
-         "Variables": "discrete.ipynb",
+index = {"Variables": "discrete.ipynb",
          "DiscreteKey": "discrete.ipynb",
          "show": "display.ipynb",
          "pretty": "display.ipynb"}
