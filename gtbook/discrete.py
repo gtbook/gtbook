@@ -5,7 +5,7 @@ __all__ = ['P', 'V', 'DiscretePrior', 'Variables', 'DiscreteKey']
 # Cell
 import gtsam
 
-from typing import List, Tuple, Callable
+from typing import List, Tuple, Callable, Dict
 
 
 # Cell
@@ -116,3 +116,36 @@ class Variables:
     def keyFormatter(self) -> Callable:
         """Return a lambda that can be used as KeyFormatter in GTSAM"""
         return lambda key: self._variables[key][0]
+
+    def assignment(self, map: Dict[DiscreteKey, str]) -> gtsam.DiscreteValues:
+        """Create a GTSAM assignment of keys to values.
+
+        Args:
+            map (Dict[DiscreteKey, str]): map from discrete keys to values.
+
+        Returns:
+            gtsam.DiscreteValues: the GTSAM equivalent.
+        """
+        values = gtsam.DiscreteValues()
+        for discreteKey, value in map.items():
+            domain = self.domain(discreteKey)
+            assert value in domain, f"Specified value not found in domain of {discreteKey}"
+            values[discreteKey[0]] = domain.index(value)
+        return values
+
+    def values_markdown(self, assignment: gtsam.DiscreteValues) -> str:
+        """Render a DiscreteValues instance as markdown.
+
+        Args:
+            assignment (gtsam.DiscreteValues): the values to render.
+
+        Returns:
+            str: a markdown string.
+        """
+        converted = {self._variables[key][0]: self._variables[key][1][value] for (
+            key, value) in assignment.items()}
+        ss = "|Variable|value|\n|:-:|:-:|\n"
+        for key, value in assignment.items():
+            name, domain = self._variables[key]
+            ss += f"|{name}|{domain[value]}|\n"
+        return ss

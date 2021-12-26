@@ -3,6 +3,7 @@
 __all__ = ['show', 'pretty']
 
 # Cell
+import gtsam
 import graphviz
 from .discrete import Variables
 
@@ -29,9 +30,16 @@ class pretty:
     def __init__(self, obj, *args):
         if args and isinstance(args[0], Variables):
             assert len(args) == 1, "Variables must be only argument."
-            self.md = obj._repr_markdown_(args[0].keyFormatter())
+            variables = args[0]
+            if isinstance(obj, gtsam.DiscreteValues):
+                self._md = variables.values_markdown(obj)
+            else:
+                self._md = obj._repr_markdown_(variables.keyFormatter())
         else:
-            self.md = obj._repr_markdown_(*args)
+            if isinstance(obj, gtsam.DiscreteValues):
+                self._md = f"{obj}"
+            else:
+                self._md = obj._repr_markdown_(*args)
 
     def _repr_markdown_(self):
-        return self.md
+        return self._md
