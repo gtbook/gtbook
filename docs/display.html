@@ -100,9 +100,9 @@ nb_path: "display.ipynb"
 <span class="n">bayesNet</span> <span class="o">=</span> <span class="n">DiscreteBayesNet</span><span class="p">()</span>
 <span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Asia</span><span class="p">,</span> <span class="s2">&quot;99/1&quot;</span><span class="p">)</span>
 <span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Smoking</span><span class="p">,</span> <span class="s2">&quot;50/50&quot;</span><span class="p">)</span>
-<span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Tuberculosis</span><span class="p">,</span> <span class="s2">&quot;99/1 95/5&quot;</span><span class="p">,</span> <span class="n">Asia</span><span class="p">)</span>
-<span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LungCancer</span><span class="p">,</span> <span class="s2">&quot;99/1 90/10&quot;</span><span class="p">,</span> <span class="n">Smoking</span><span class="p">)</span>
-<span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Either</span><span class="p">,</span> <span class="s2">&quot;F T T T&quot;</span><span class="p">,</span> <span class="n">Tuberculosis</span><span class="p">,</span> <span class="n">LungCancer</span><span class="p">)</span>
+<span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Tuberculosis</span><span class="p">,</span> <span class="p">[</span><span class="n">Asia</span><span class="p">],</span> <span class="s2">&quot;99/1 95/5&quot;</span><span class="p">)</span>
+<span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LungCancer</span><span class="p">,</span> <span class="p">[</span><span class="n">Smoking</span><span class="p">],</span> <span class="s2">&quot;99/1 90/10&quot;</span><span class="p">)</span>
+<span class="n">bayesNet</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Either</span><span class="p">,</span> <span class="p">[</span><span class="n">Tuberculosis</span><span class="p">,</span> <span class="n">LungCancer</span><span class="p">],</span> <span class="s2">&quot;F T T T&quot;</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -916,7 +916,7 @@ nb_path: "display.ipynb"
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">DiscreteFactorGraph</span><span class="p">()</span>
-<span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Asia</span><span class="p">,</span> <span class="n">Smoking</span><span class="p">,</span> <span class="s2">&quot;4 1 10 4&quot;</span><span class="p">)</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">Asia</span><span class="p">,</span> <span class="n">Smoking</span><span class="p">],</span> <span class="s2">&quot;4 1 10 4&quot;</span><span class="p">)</span>
 <span class="n">pretty</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">keyFormatter</span><span class="p">)</span>
 </pre></div>
 
@@ -978,7 +978,7 @@ nb_path: "display.ipynb"
 <span class="n">fragment</span> <span class="o">=</span> <span class="n">DiscreteBayesNet</span><span class="p">()</span>
 <span class="n">fragment</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="s2">&quot;99/1&quot;</span><span class="p">)</span>
 <span class="n">fragment</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="s2">&quot;50/50&quot;</span><span class="p">)</span>
-<span class="n">fragment</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">C</span><span class="p">,</span>  <span class="s2">&quot;F T T T&quot;</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">L</span><span class="p">)</span>
+<span class="n">fragment</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="p">[</span><span class="n">T</span><span class="p">,</span> <span class="n">L</span><span class="p">],</span>  <span class="s2">&quot;F T T T&quot;</span><span class="p">)</span>
 </pre></div>
 
     </div>
