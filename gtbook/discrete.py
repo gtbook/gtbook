@@ -72,6 +72,10 @@ class Variables:
         """Return a lambda that can be used as KeyFormatter in GTSAM"""
         return lambda key: self._variables[key][0]
 
+    def names(self) -> Dict[int, List[str]]:
+        """Return a names dictionary that is used by GTSAM markdown methods"""
+        return {key: domain for (key, (name, domain)) in self._variables.items()}
+
     def assignment(self, map: Dict[DiscreteKey, str]) -> gtsam.DiscreteValues:
         """Create a GTSAM assignment of keys to values.
 

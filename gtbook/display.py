@@ -34,7 +34,8 @@ class pretty:
             if isinstance(obj, gtsam.DiscreteValues):
                 self._md = variables.values_markdown(obj)
             else:
-                self._md = obj._repr_markdown_(variables.keyFormatter())
+                self._md = obj._repr_markdown_(
+                    variables.keyFormatter(), variables.names())
         else:
             if isinstance(obj, gtsam.DiscreteValues):
                 self._md = f"{obj}"
