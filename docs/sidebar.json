@@ -1,6 +1,7 @@
 {
   "gtbook": {
     "Overview": "/",
+    "CLI tools": "cli.html",
     "Utilities for Discrete Inference": "discrete.html",
     "Displaying objects in notebooks": "display.html"
   }

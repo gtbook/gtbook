@@ -16,9 +16,11 @@ You also needs a cell that imports what you need in a particular section, for ex
 
 ```python
 from gtbook.display import show
-from gtbook.discrete import P, DiscretePrior, V
+from gtbook.discrete import Variables
 ```
 Further usage examples of these and more functions are given in the module documentation itself.
+
+There are also some command line tools defined in the `cli` module.
 
 ## Notes for development
 

@@ -10,6 +10,9 @@ entries:
       title: Overview
       url: /
     - output: web,pdf
+      title: CLI tools
+      url: cli.html
+    - output: web,pdf
       title: Utilities for Discrete Inference
       url: discrete.html
     - output: web,pdf
