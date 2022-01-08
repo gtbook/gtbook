@@ -1,16 +1,16 @@
 package:
   name: gtbook
-  version: 0.0.7
+  version: 0.0.8
 source:
-  sha256: ab1de94c738dc568afefe61d5321d108bc6e105d4bc7e7f1205fab13a4291533
-  url: https://files.pythonhosted.org/packages/67/33/ad36e53f0e39d8c81a67e4bfbb03b7b0f89ff4b4aa1e56dddcd706ccde34/gtbook-0.0.7.tar.gz
+  sha256: 6ee2105b5c96599ca229f421ebfc521a1bb50cc2738f98ec2e9d23c473a68bff
+  url: https://files.pythonhosted.org/packages/2d/01/a7a4e30e17c3f52e002dd7e0686ef46f9a9b67bb11117d6da70609ccf717/gtbook-0.0.8.tar.gz
 about:
-  dev_url: https://dellaert.github.io
-  doc_url: https://dellaert.github.io
-  home: https://dellaert.github.io
+  dev_url: https://gtbook.github.io/
+  doc_url: https://gtbook.github.io/
+  home: https://gtbook.github.io/
   license: Apache Software
   license_family: APACHE
-  summary: test of nbdev
+  summary: Frank Dellaerts book support lib, made with nbdev
 build:
   noarch: python
   number: '0'
@@ -23,10 +23,12 @@ requirements:
   - pip
   - python
   - packaging
+  - python-graphviz
   run:
   - pip
   - python
   - packaging
+  - python-graphviz
 test:
   imports:
   - gtbook
