@@ -16,7 +16,7 @@ jobs:
         auto-activate-base: false
         activate-environment: gtbook-dev
         python-version: 3.8
-        environment-file: environment.yml
+        environment-file: etc/environment.yml
     - name: Install the library
       run: pip install -e .
     - name: Read all notebooks
