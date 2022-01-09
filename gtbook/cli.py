@@ -15,7 +15,6 @@ def rename(dir: str  # dir in which to rename files
     assert path.exists(), f"dir '{dir}' not found"
     assert path.is_dir(), f"'{dir}' is not a directory"
     print("Renaming notebooks now.")
-    nbs = [x for x in path.iterdir() if x.suffix == '.ipynb']
     for ch in list(range(8, -1, -1)):
         print(f"Renaming chapter {ch}:")
         for x in path.glob(f"S{ch}*.ipynb"):
