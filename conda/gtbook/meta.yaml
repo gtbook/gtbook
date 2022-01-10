@@ -1,9 +1,9 @@
 package:
   name: gtbook
-  version: 0.0.8
+  version: 0.0.9
 source:
-  sha256: 6ee2105b5c96599ca229f421ebfc521a1bb50cc2738f98ec2e9d23c473a68bff
-  url: https://files.pythonhosted.org/packages/2d/01/a7a4e30e17c3f52e002dd7e0686ef46f9a9b67bb11117d6da70609ccf717/gtbook-0.0.8.tar.gz
+  sha256: 4d6de27effca5c783160244575116ef5a58ed62ebe07f48d49f11342d0cbf75f
+  url: https://files.pythonhosted.org/packages/16/2c/8e869b7af3ad7eeb55d847e95faa6f8a07fda4035dac4c007fd2884c8d8a/gtbook-0.0.9.tar.gz
 about:
   dev_url: https://gtbook.github.io/
   doc_url: https://gtbook.github.io/
