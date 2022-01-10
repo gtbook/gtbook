@@ -50,15 +50,15 @@ class pretty:
 from IPython.core.display import HTML
 import random
 
-ROBOTS = ["Robot menagerie", "Trash sorting robot with Gripper", "iRobot vacuuming robot", "Warehouse robots",
-          "Two-wheeled Toy Robot", "Autonomous Vehicle with LIDAR and cameras", "Autonomous camera drone"]
+ROBOTS = ["Robot%20menagerie", "Trash%20sorting%20robot%20with%20gripper", "iRobot%20vacuuming%20robot", "Warehouse%20robots",
+          "Two-wheeled%20Toy%20Robot", "Autonomous%20Vehicle%20with%20LIDAR%20and%20cameras", "Autonomous%20camera%20drone"]
 
 
 def randomImages(ch: int, sec: int, style: str, nrImages: int, maxIndex: int = 8):
     """Create an HTML element with some random images.
 
     Args:
-        ch (int): chapter number
+        ch (int): chapter number (base 1)
         sec (int): section number
         style (str): "cubist" | "steampunk" | "expressive"
         nrImages (int): number of images
@@ -68,7 +68,7 @@ def randomImages(ch: int, sec: int, style: str, nrImages: int, maxIndex: int = 8
         HTML: div with nrImages
     """
     perc = round(100/nrImages)
-    robot = ROBOTS[ch]
+    robot = ROBOTS[ch-1]
 
     def image_tag(index):
         url = f"https://github.com/gtbook/robotics/blob/main/Art/{style}/S{ch}{sec}-{robot}-{index:02d}.jpg?raw=1"

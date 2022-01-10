@@ -8,7 +8,8 @@ from fastcore.script import call_parse
 
 # Cell
 @call_parse
-def rename(dir: str  # dir in which to rename files
+def rename(dir: str,  # dir in which to rename files
+           suffix: str = ".ipynb"  # suffix of files to change
            ):
     """Rename notebooks to base 1 for chapters."""
     path = Path(dir)
@@ -17,7 +18,7 @@ def rename(dir: str  # dir in which to rename files
     print("Renaming notebooks now.")
     for ch in list(range(8, -1, -1)):
         print(f"Renaming chapter {ch}:")
-        for x in path.glob(f"S{ch}*.ipynb"):
+        for x in path.glob(f"S{ch}*{suffix}"):
             new_name = path / x.name.replace(f"S{ch}", f"S{ch+1}")
             print(f"Renaming {x} to {new_name}")
             x.rename(new_name)
