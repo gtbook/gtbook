@@ -7,7 +7,9 @@ index = {"rename": "cli.ipynb",
          "Variables": "discrete.ipynb",
          "DiscreteKey": "discrete.ipynb",
          "show": "display.ipynb",
-         "pretty": "display.ipynb"}
+         "pretty": "display.ipynb",
+         "randomImages": "display.ipynb",
+         "ROBOTS": "display.ipynb"}
 
 modules = ["cli.py",
            "discrete.py",

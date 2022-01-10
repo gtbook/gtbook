@@ -101,10 +101,15 @@ class Variables:
         Returns:
             str: a markdown string.
         """
-        converted = {self._variables[key][0]: self._variables[key][1][value] for (
-            key, value) in assignment.items()}
-        ss = "|Variable|value|\n|:-:|:-:|\n"
-        for key, value in assignment.items():
-            name, domain = self._variables[key]
-            ss += f"|{name}|{domain[value]}|\n"
-        return ss
+        return gtsam.markdown(assignment, self.keyFormatter(), self.names())
+
+    def values_html(self, assignment: gtsam.DiscreteValues) -> str:
+        """Render a DiscreteValues instance as html.
+
+        Args:
+            assignment (gtsam.DiscreteValues): the values to render.
+
+        Returns:
+            str: a html string.
+        """
+        return gtsam.html(assignment, self.keyFormatter(), self.names())
