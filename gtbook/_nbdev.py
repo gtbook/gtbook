@@ -3,7 +3,9 @@
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
 index = {"rename": "cli.ipynb",
-         "add_copyright": "cli.ipynb",
+         "fix_colab_links": "cli.ipynb",
+         "REGEX": "cli.ipynb",
+         "fix_nbs_colab_links": "cli.ipynb",
          "Variables": "discrete.ipynb",
          "DiscreteKey": "discrete.ipynb",
          "show": "display.ipynb",
