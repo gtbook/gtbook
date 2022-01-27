@@ -50,11 +50,11 @@ nb_path: "discrete.ipynb"
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">C</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span>  <span class="c1"># A key is an identifier and a cardinality</span>
-<span class="n">prior</span> <span class="o">=</span> <span class="n">gtsam</span><span class="o">.</span><span class="n">DiscretePrior</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="s2">&quot;25/20/30/20/5&quot;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">gtbook.display</span> <span class="kn">import</span> <span class="n">show</span>
+<span class="n">C</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span>  <span class="c1"># A key is an identifier and a cardinality</span>
+<span class="n">prior</span> <span class="o">=</span> <span class="n">gtsam</span><span class="o">.</span><span class="n">DiscreteDistribution</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="s2">&quot;25/20/30/20/5&quot;</span><span class="p">)</span>
 <span class="n">test_eq</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">empty</span><span class="p">(),</span> <span class="kc">False</span><span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">gtbook.display</span> <span class="kn">import</span> <span class="n">show</span>
 <span class="c1"># TODO: this does not support formatting yet</span>
 <span class="n">show</span><span class="p">(</span><span class="n">prior</span><span class="p">)</span>
 </pre></div>
@@ -81,69 +81,69 @@ nb_path: "discrete.ipynb"
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 101)">
 <title>G</title>
 <polygon fill="white" stroke="transparent" points="-4,4 -4,-101 346,-101 346,4 -4,4"/>
-<!-- 0x6000029292e0 -->
+<!-- 0x600001412dc0 -->
 <g id="node1" class="node">
-<title>0x6000029292e0</title>
+<title>0x600001412dc0</title>
 <ellipse fill="none" stroke="black" cx="171" cy="-79" rx="18" ry="18"/>
 <text text-anchor="middle" x="171" y="-75.3" font-family="Times,serif" font-size="14.00">0</text>
 </g>
-<!-- 0x600000839040 -->
+<!-- 0x60000350c9a0 -->
 <g id="node2" class="node">
-<title>0x600000839040</title>
+<title>0x60000350c9a0</title>
 <polygon fill="none" stroke="black" points="54,-25 0,-25 0,0 54,0 54,-25"/>
 <text text-anchor="middle" x="27" y="-8.8" font-family="Times,serif" font-size="14.00">0.25</text>
 </g>
-<!-- 0x6000029292e0&#45;&gt;0x600000839040 -->
+<!-- 0x600001412dc0&#45;&gt;0x60000350c9a0 -->
 <g id="edge1" class="edge">
-<title>0x6000029292e0&#45;&gt;0x600000839040</title>
+<title>0x600001412dc0&#45;&gt;0x60000350c9a0</title>
 <path fill="none" stroke="black" d="M154.76,-70.73C132.39,-60.71 91.53,-42.4 62.03,-29.19"/>
 <polygon fill="black" stroke="black" points="63.44,-25.99 52.89,-25.1 60.58,-32.38 63.44,-25.99"/>
 </g>
-<!-- 0x600000839050 -->
+<!-- 0x60000350c9b0 -->
 <g id="node3" class="node">
-<title>0x600000839050</title>
+<title>0x60000350c9b0</title>
 <polygon fill="none" stroke="black" points="126,-25 72,-25 72,0 126,0 126,-25"/>
 <text text-anchor="middle" x="99" y="-8.8" font-family="Times,serif" font-size="14.00"> 0.2</text>
 </g>
-<!-- 0x6000029292e0&#45;&gt;0x600000839050 -->
+<!-- 0x600001412dc0&#45;&gt;0x60000350c9b0 -->
 <g id="edge2" class="edge">
-<title>0x6000029292e0&#45;&gt;0x600000839050</title>
+<title>0x600001412dc0&#45;&gt;0x60000350c9b0</title>
 <path fill="none" stroke="black" d="M157.79,-66.17C147.14,-56.62 131.95,-43.02 119.69,-32.03"/>
 <polygon fill="black" stroke="black" points="121.91,-29.32 112.12,-25.26 117.24,-34.53 121.91,-29.32"/>
 </g>
-<!-- 0x600000839060 -->
+<!-- 0x60000350c9c0 -->
 <g id="node4" class="node">
-<title>0x600000839060</title>
+<title>0x60000350c9c0</title>
 <polygon fill="none" stroke="black" points="198,-25 144,-25 144,0 198,0 198,-25"/>
 <text text-anchor="middle" x="171" y="-8.8" font-family="Times,serif" font-size="14.00"> 0.3</text>
 </g>
-<!-- 0x6000029292e0&#45;&gt;0x600000839060 -->
+<!-- 0x600001412dc0&#45;&gt;0x60000350c9c0 -->
 <g id="edge3" class="edge">
-<title>0x6000029292e0&#45;&gt;0x600000839060</title>
+<title>0x600001412dc0&#45;&gt;0x60000350c9c0</title>
 <path fill="none" stroke="black" d="M171,-60.72C171,-52.93 171,-43.65 171,-35.39"/>
 <polygon fill="black" stroke="black" points="174.5,-35.32 171,-25.32 167.5,-35.32 174.5,-35.32"/>
 </g>
-<!-- 0x600000839070 -->
+<!-- 0x60000350c9d0 -->
 <g id="node5" class="node">
-<title>0x600000839070</title>
+<title>0x60000350c9d0</title>
 <polygon fill="none" stroke="black" points="270,-25 216,-25 216,0 270,0 270,-25"/>
 <text text-anchor="middle" x="243" y="-8.8" font-family="Times,serif" font-size="14.00"> 0.2</text>
 </g>
-<!-- 0x6000029292e0&#45;&gt;0x600000839070 -->
+<!-- 0x600001412dc0&#45;&gt;0x60000350c9d0 -->
 <g id="edge4" class="edge">
-<title>0x6000029292e0&#45;&gt;0x600000839070</title>
+<title>0x600001412dc0&#45;&gt;0x60000350c9d0</title>
 <path fill="none" stroke="black" d="M184.21,-66.17C194.86,-56.62 210.05,-43.02 222.31,-32.03"/>
 <polygon fill="black" stroke="black" points="224.76,-34.53 229.88,-25.26 220.09,-29.32 224.76,-34.53"/>
 </g>
-<!-- 0x600000839080 -->
+<!-- 0x60000350c9e0 -->
 <g id="node6" class="node">
-<title>0x600000839080</title>
+<title>0x60000350c9e0</title>
 <polygon fill="none" stroke="black" points="342,-25 288,-25 288,0 342,0 342,-25"/>
 <text text-anchor="middle" x="315" y="-8.8" font-family="Times,serif" font-size="14.00">0.05</text>
 </g>
-<!-- 0x6000029292e0&#45;&gt;0x600000839080 -->
+<!-- 0x600001412dc0&#45;&gt;0x60000350c9e0 -->
 <g id="edge5" class="edge">
-<title>0x6000029292e0&#45;&gt;0x600000839080</title>
+<title>0x600001412dc0&#45;&gt;0x60000350c9e0</title>
 <path fill="none" stroke="black" d="M187.24,-70.73C209.61,-60.71 250.47,-42.4 279.97,-29.19"/>
 <polygon fill="black" stroke="black" points="281.42,-32.38 289.11,-25.1 278.56,-25.99 281.42,-32.38"/>
 </g>
@@ -343,7 +343,7 @@ nb_path: "discrete.ipynb"
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">assignment</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">assignment</span><span class="p">({</span><span class="n">Category</span><span class="p">:</span><span class="s2">&quot;can&quot;</span><span class="p">})</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">assignment</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">assignment</span><span class="p">({</span><span class="n">Category</span><span class="p">:</span> <span class="s2">&quot;can&quot;</span><span class="p">})</span>
 <span class="n">test_eq</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">assignment</span><span class="p">,</span> <span class="n">gtsam</span><span class="o">.</span><span class="n">DiscreteValues</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
 <span class="n">test_eq</span><span class="p">(</span><span class="n">assignment</span><span class="p">[</span><span class="n">C</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">categories</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;can&quot;</span><span class="p">))</span>
 </pre></div>
@@ -357,7 +357,7 @@ nb_path: "discrete.ipynb"
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We also create a markdown renderer for <code>DiscreteValues</code>, awaiting the ability of pybind11 to wrap classes ingereited from STL containers:</p>
+<p>We also create a markdown renderer for <code>DiscreteValues</code> , awaiting the ability of pybind11 to wrap classes ingereited from STL containers:</p>
 
 </div>
 </div>
@@ -369,10 +369,127 @@ nb_path: "discrete.ipynb"
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_eq</span><span class="p">(</span><span class="n">variables</span><span class="o">.</span><span class="n">values_markdown</span><span class="p">(</span><span class="n">assignment</span><span class="p">),</span> <span class="s1">&#39;|Variable|value|</span><span class="se">\n</span><span class="s1">|:-:|:-:|</span><span class="se">\n</span><span class="s1">|Category|can|</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_eq</span><span class="p">(</span><span class="n">variables</span><span class="o">.</span><span class="n">values_markdown</span><span class="p">(</span><span class="n">assignment</span><span class="p">),</span>
+        <span class="s1">&#39;|Variable|value|</span><span class="se">\n</span><span class="s1">|:-:|:-:|</span><span class="se">\n</span><span class="s1">|Category|can|</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As of version <code>0.0.14</code> , we also support generating a set of discrete keys with integer indices, to support reasoning over time:</p>
+
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">n</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+
+<span class="c1"># add 5 variables</span>
+<span class="n">states</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">discrete_series</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="p">[</span><span class="s2">&quot;no&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">])</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">variables</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">n</span><span class="o">+</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># calling twice should not add any more</span>
+<span class="n">states</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">discrete_series</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="p">[</span><span class="s2">&quot;no&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">])</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">variables</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">n</span><span class="o">+</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="n">test_eq</span><span class="p">(</span><span class="n">variables</span><span class="o">.</span><span class="n">name</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s2">&quot;s0&quot;</span><span class="p">)</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">variables</span><span class="o">.</span><span class="n">domain</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">[</span><span class="s2">&quot;no&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">n</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+
+<span class="c1"># expand range</span>
+<span class="n">states</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">discrete_series</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="p">[</span><span class="s2">&quot;no&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">])</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">variables</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">n</span><span class="o">+</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">variables</span><span class="o">.</span><span class="n">name</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="mi">9</span><span class="p">]),</span> <span class="s2">&quot;s9&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It would be nice to inspect variables:</p>
+
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">variables</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<table class='Variables'>
+  <thead>
+    <tr><th>Variable</th><th>Domain</th></tr>
+  </thead>
+  <tbody>
+    <tr><th>Category</th><td>cardboard, paper, can, scrap metal, bottle</td></tr>
+    <tr><th>Conductivity</th><td>false, true</td></tr>
+    <tr><th>s0</th><td>no, yes</td></tr>
+    <tr><th>s1</th><td>no, yes</td></tr>
+    <tr><th>s2</th><td>no, yes</td></tr>
+    <tr><th>s3</th><td>no, yes</td></tr>
+    <tr><th>s4</th><td>no, yes</td></tr>
+    <tr><th>s5</th><td>no, yes</td></tr>
+    <tr><th>s6</th><td>no, yes</td></tr>
+    <tr><th>s7</th><td>no, yes</td></tr>
+    <tr><th>s8</th><td>no, yes</td></tr>
+    <tr><th>s9</th><td>no, yes</td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
 </div>
 </div>
 

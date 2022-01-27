@@ -6,6 +6,8 @@ __all__ = ['show', 'pretty', 'randomImages', 'ROBOTS']
 import gtsam
 import graphviz
 from .discrete import Variables
+from .dbn import dbn_writer
+
 
 # Cell
 class show(graphviz.Source):
@@ -17,11 +19,18 @@ class show(graphviz.Source):
         # resulting string to initialize a graphviz.Source instance. This in turn
         # has a _repr_mimebundle_ method, which then renders it in the notebook.
         if args and isinstance(args[0], Variables):
-            assert len(args) == 1, "Variables must be only argument."
+            assert len(args) == 1, "Variables must be only positional argument."
             keyFormatter = args[0].keyFormatter()
-            super().__init__(obj.dot(keyFormatter))
+            # Special treatment of DBN positions
+            engine = "dot"
+            writer = dbn_writer(obj, **kwargs)
+            if writer is not None:
+                engine = "neato"
+                kwargs["writer"] = writer
+            super().__init__(obj.dot(keyFormatter, **kwargs), engine=engine)
         else:
             super().__init__(obj.dot(*args, **kwargs))
+
 
 # Cell
 class pretty:
@@ -47,7 +56,7 @@ class pretty:
 
 
 # Cell
-from IPython.core.display import HTML
+from IPython.display import HTML
 import random
 
 ROBOTS = ["Robot%20menagerie", "Trash%20sorting%20robot%20with%20gripper", "iRobot%20vacuuming%20robot", "Warehouse%20robots",

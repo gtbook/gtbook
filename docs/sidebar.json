@@ -2,6 +2,7 @@
   "gtbook": {
     "Overview": "/",
     "CLI tools": "cli.html",
+    "Support code for Dynamic Bayes Nets": "dbn.html",
     "Utilities for Discrete Inference": "discrete.html",
     "Displaying objects in notebooks": "display.html"
   }

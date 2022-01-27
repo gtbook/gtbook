@@ -5,7 +5,7 @@ __all__ = ['Variables', 'DiscreteKey']
 # Cell
 import gtsam
 
-from typing import List, Tuple, Callable, Dict
+from typing import List, Tuple, Callable, Dict, Iterable
 
 
 # Cell
@@ -19,7 +19,12 @@ class Variables:
     BINARY = ["false", "true"]
 
     def __init__(self):
-        self._variables = {}
+        """Default constructor"""
+        self._variables = dict()
+
+    def size(self):
+        """Return number of variables defined."""
+        return len(self._variables)
 
     def discrete(self, name: str, domain: List[str]) -> DiscreteKey:
         """Create a variable with given name and discrete domain of named values.
@@ -29,11 +34,34 @@ class Variables:
             domain (List[str]): names for the different values.
 
         Returns:
-            key: DiscreteKey, i.e., (gtsam.Key, cardinality)
+            DiscreteKey, i.e., (gtsam.Key, cardinality)
         """
         discreteKey = len(self._variables), len(domain)
         self._variables[discreteKey[0]] = name, domain
         return discreteKey
+
+    def discrete_series(self, character: str, indices: Iterable[int],
+                        domain: List[str]) -> List[DiscreteKey]:
+        """Create several discrete variables with Symbol names.
+
+        Args:
+            character (str): a single character.
+            indices: (Iterable[int]): a set of integer indices.
+            domain (List[str]): names for the different values.
+
+        Returns:
+            List[DiscreteKey], i.e., [(gtsam.Key, cardinality)]
+        """
+        assert len(character) == 1, "discrete_series: requires character only"
+        n = len(domain)
+        discreteKeys = []
+        for index in indices:
+            symbol = gtsam.Symbol(character, index)
+            key = symbol.key()
+            discreteKeys.append((key, n))
+            name = symbol.string()
+            self._variables[key] = name, domain
+        return discreteKeys
 
     def binary(self, name: str) -> DiscreteKey:
         """Create a binary variable with given name.
@@ -42,7 +70,7 @@ class Variables:
             name (str): name of the variable.
 
         Returns:
-            key: DiscreteKey, i.e., (gtsam.Key, cardinality)
+            DiscreteKey, i.e., (gtsam.Key, cardinality)
         """
         return self.discrete(name, self.BINARY)
 
@@ -88,7 +116,7 @@ class Variables:
         values = gtsam.DiscreteValues()
         for discreteKey, value in map.items():
             domain = self.domain(discreteKey)
-            assert value in domain, f"Specified value not found in domain of {discreteKey}"
+            assert value in domain, f"Specified value '{value}' not found in domain of '{self.name(discreteKey)}'. Allowed values are {domain}."
             values[discreteKey[0]] = domain.index(value)
         return values
 
@@ -113,3 +141,27 @@ class Variables:
             str: a html string.
         """
         return gtsam.html(assignment, self.keyFormatter(), self.names())
+
+    def _repr_html_(self):
+        """An html representation
+        """
+        # Print out preamble.
+        ss = "<div>\n<table class='Variables'>\n  <thead>\n"
+
+        # Print out header row.
+        ss += "    <tr><th>Variable</th><th>Domain</th></tr>\n"
+
+        # Finish header and start body.
+        ss += "  </thead>\n  <tbody>\n"
+
+        # Print out all rows.
+        for name, domain in self._variables.values():
+            ss += "    <tr>"
+            ss += "<th>" + name + "</th><td>"
+            for value in domain[:-1]:
+                ss += value + ", "
+            ss += domain[-1]
+            ss += "</td>"
+            ss += "</tr>\n"
+        ss += "  </tbody>\n</table>\n</div>"
+        return ss

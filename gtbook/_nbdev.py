@@ -6,6 +6,11 @@ index = {"rename": "cli.ipynb",
          "fix_colab_links": "cli.ipynb",
          "REGEX": "cli.ipynb",
          "fix_nbs_colab_links": "cli.ipynb",
+         "dbs_position": "dbn.ipynb",
+         "dbk_position": "dbn.ipynb",
+         "dbc_position": "dbn.ipynb",
+         "dbn_positions": "dbn.ipynb",
+         "dbn_writer": "dbn.ipynb",
          "Variables": "discrete.ipynb",
          "DiscreteKey": "discrete.ipynb",
          "show": "display.ipynb",
@@ -14,6 +19,7 @@ index = {"rename": "cli.ipynb",
          "ROBOTS": "display.ipynb"}
 
 modules = ["cli.py",
+           "dbn.py",
            "discrete.py",
            "display.py"]
 
