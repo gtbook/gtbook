@@ -41,7 +41,7 @@ class Variables:
         return discreteKey
 
     def discrete_series(self, character: str, indices: Iterable[int],
-                        domain: List[str]) -> List[DiscreteKey]:
+                        domain: List[str]) -> Dict[int, DiscreteKey]:
         """Create several discrete variables with Symbol names.
 
         Args:
@@ -54,14 +54,15 @@ class Variables:
         """
         assert len(character) == 1, "discrete_series: requires character only"
         n = len(domain)
-        discreteKeys = []
-        for index in indices:
+
+        def make_key(index):
             symbol = gtsam.Symbol(character, index)
             key = symbol.key()
-            discreteKeys.append((key, n))
             name = symbol.string()
             self._variables[key] = name, domain
-        return discreteKeys
+            return (key, n)
+
+        return {index: make_key(index) for index in indices}
 
     def binary(self, name: str) -> DiscreteKey:
         """Create a binary variable with given name.
