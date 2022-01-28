@@ -1,6 +1,7 @@
 # gtbook
 > An <a href='https://nbdev.fast.ai/'>nbdev</a> powered toolbox for Frank and Seth's robotics book.
 
+[![CI](https://github.com/gtbook/gtbook/actions/workflows/main.yml/badge.svg)](https://github.com/gtbook/gtbook/actions/workflows/main.yml)
 
 ## How to use
 
