@@ -38,7 +38,7 @@ nb_path: "dbn.ipynb"
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To show DBNs, we employ dirty tricks: we check whether the key is a <code>gtsam.Symbol</code> with character A/X/Z (or u/x/z for continuous) and then use the index to specify a position in the "DBN grid":</p>
+<p>Create or amend a DotWriter to be use in show:</p>
 
 </div>
 </div>
@@ -54,9 +54,10 @@ nb_path: "dbn.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="dbs_position" class="doc_header"><code>dbs_position</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/dbn.py#L9" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>dbs_position</code>(<strong><code>symbol</code></strong>)</p>
+<h4 id="dbn_writer" class="doc_header"><code>dbn_writer</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/dbn.py#L9" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>dbn_writer</code>(<strong><code>writer</code></strong>=<em><code>None</code></em>, <strong><code>hints</code></strong>:<code>dict</code>=<em><code>None</code></em>, <strong><code>positions</code></strong>:<code>dict</code>=<em><code>None</code></em>, <strong><code>boxes</code></strong>:<code>set</code>=<em><code>None</code></em>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>Calculate position of a DBN Symbol</p>
+<p>Create a DotWriter depending on input arguments:
+If writer is supplied, we will add but not overwrite hints or positions.</p>
 
 </div>
 
@@ -79,9 +80,9 @@ nb_path: "dbn.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="dbk_position" class="doc_header"><code>dbk_position</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/dbn.py#L17" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>dbk_position</code>(<strong><code>key</code></strong>)</p>
+<h4 id="has_positions" class="doc_header"><code>has_positions</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/dbn.py#L43" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>has_positions</code>(<strong><code>writer</code></strong>)</p>
 </blockquote>
-<p>Calculate position of a DBN Key</p>
+<p>Check if writer has positions for engine selection</p>
 
 </div>
 
@@ -107,225 +108,36 @@ nb_path: "dbn.ipynb"
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_eq</span><span class="p">(</span><span class="n">dbs_position</span><span class="p">(</span><span class="n">gtsam</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="mi">9</span><span class="p">)),</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="n">dbs_position</span><span class="p">(</span><span class="n">gtsam</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="mi">7</span><span class="p">)),</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="n">dbs_position</span><span class="p">(</span><span class="n">gtsam</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="n">dbs_position</span><span class="p">(</span><span class="n">gtsam</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
-<span class="n">U</span> <span class="o">=</span> <span class="n">gtsam</span><span class="o">.</span><span class="n">symbol_shorthand</span><span class="o">.</span><span class="n">U</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">gtsam</span><span class="o">.</span><span class="n">symbol_shorthand</span><span class="o">.</span><span class="n">X</span>
-<span class="n">Z</span> <span class="o">=</span> <span class="n">gtsam</span><span class="o">.</span><span class="n">symbol_shorthand</span><span class="o">.</span><span class="n">Z</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="n">dbk_position</span><span class="p">(</span><span class="n">U</span><span class="p">(</span><span class="mi">9</span><span class="p">)),</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="n">dbk_position</span><span class="p">(</span><span class="n">X</span><span class="p">(</span><span class="mi">7</span><span class="p">)),</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="n">dbk_position</span><span class="p">(</span><span class="n">Z</span><span class="p">(</span><span class="mi">2</span><span class="p">)),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
-</pre></div>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">assert</span> <span class="n">dbn_writer</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="k">assert</span> <span class="n">dbn_writer</span><span class="p">(</span><span class="n">exact</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
 
-    </div>
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Code below uses this for (any) conditional:</p>
-
-</div>
-</div>
-</div>
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4 id="dbc_position" class="doc_header"><code>dbc_position</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/dbn.py#L22" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>dbc_position</code>(<strong><code>conditional</code></strong>)</p>
-</blockquote>
-<p>Return (key,position) for a Conditional with a DBN key</p>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">key</span> <span class="o">=</span> <span class="n">U</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span>
-<span class="n">conditional</span> <span class="o">=</span> <span class="n">gtsam</span><span class="o">.</span><span class="n">DiscreteDistribution</span><span class="p">((</span><span class="n">key</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="s2">&quot;1/1&quot;</span><span class="p">)</span>
-<span class="n">expected</span>  <span class="o">=</span> <span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="n">dbc_position</span><span class="p">(</span><span class="n">conditional</span><span class="p">),</span> <span class="n">expected</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>And (any) BayesNet derived class:</p>
-
-</div>
-</div>
-</div>
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4 id="dbn_positions" class="doc_header"><code>dbn_positions</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/dbn.py#L28" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>dbn_positions</code>(<strong><code>bayesNet</code></strong>)</p>
-</blockquote>
-<p>Calculate positions for a DBN as a {key:position} dictionary</p>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dbn</span> <span class="o">=</span> <span class="n">gtsam</span><span class="o">.</span><span class="n">DiscreteBayesNet</span><span class="p">()</span>
-<span class="n">u1</span> <span class="o">=</span> <span class="n">U</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="mi">2</span>
-<span class="n">x4</span> <span class="o">=</span> <span class="n">X</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="mi">2</span>
-<span class="n">dbn</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u1</span><span class="p">,</span> <span class="p">[],</span> <span class="s2">&quot;1/1&quot;</span><span class="p">)</span>
-<span class="n">dbn</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x4</span><span class="p">,</span> <span class="p">[</span><span class="n">u1</span><span class="p">],</span> <span class="s2">&quot;1/1 1/2&quot;</span><span class="p">)</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="n">dbn_positions</span><span class="p">(</span><span class="n">dbn</span><span class="p">),</span> <span class="p">{</span><span class="n">U</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">X</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)})</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>If a Bayes net does <em>not</em> contain these keys, we get an empty dictionary:</p>
-
-</div>
-</div>
-</div>
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">non_dbn</span> <span class="o">=</span> <span class="n">gtsam</span><span class="o">.</span><span class="n">DiscreteBayesNet</span><span class="p">()</span>
-<span class="n">discreteKey</span> <span class="o">=</span> <span class="mi">123</span><span class="p">,</span><span class="mi">2</span>
-<span class="n">non_dbn</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">discreteKey</span><span class="p">,</span> <span class="p">[],</span> <span class="s2">&quot;1/1&quot;</span><span class="p">)</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="n">dbn_positions</span><span class="p">(</span><span class="n">non_dbn</span><span class="p">),</span> <span class="p">{})</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Finally, either create or amend a DotWriter to be use in show:</p>
-
-</div>
-</div>
-</div>
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4 id="dbn_writer" class="doc_header"><code>dbn_writer</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/dbn.py#L34" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>dbn_writer</code>(<strong><code>obj</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
-</blockquote>
-<p>Create a DotWriter with variable positions for showing DBNs</p>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_is</span><span class="p">(</span><span class="n">dbn_writer</span><span class="p">(</span><span class="n">non_dbn</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+<span class="c1"># Check passthrough</span>
 <span class="n">writer</span> <span class="o">=</span> <span class="n">gtsam</span><span class="o">.</span><span class="n">DotWriter</span><span class="p">()</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="n">dbn_writer</span><span class="p">(</span><span class="n">non_dbn</span><span class="p">,</span> <span class="n">writer</span><span class="o">=</span><span class="n">writer</span><span class="p">),</span> <span class="n">writer</span><span class="p">)</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">dbn_writer</span><span class="p">(</span><span class="n">writer</span><span class="p">),</span> <span class="n">writer</span><span class="p">)</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">has_positions</span><span class="p">(</span><span class="n">writer</span><span class="p">),</span> <span class="kc">False</span><span class="p">)</span>
 
-<span class="c1"># DBN</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dbn_writer</span><span class="p">(</span><span class="n">dbn</span><span class="p">)</span><span class="o">.</span><span class="n">variablePositions</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dbn_writer</span><span class="p">(</span><span class="n">dbn</span><span class="p">,</span> <span class="n">writer</span><span class="o">=</span><span class="n">writer</span><span class="p">)</span><span class="o">.</span><span class="n">variablePositions</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="c1"># Check boxes, and that they don&#39;t stomp</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">dbn_writer</span><span class="p">(</span><span class="n">boxes</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">})</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">boxes</span><span class="p">,</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">})</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">dbn_writer</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">boxes</span><span class="o">=</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">})</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">boxes</span><span class="p">,</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">})</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">has_positions</span><span class="p">(</span><span class="n">writer</span><span class="p">),</span> <span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Check hints, and that they don&#39;t stomp</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">dbn_writer</span><span class="p">(</span><span class="n">hints</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">positionHints</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">dbn_writer</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">hints</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">positionHints</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">has_positions</span><span class="p">(</span><span class="n">writer</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Check positions, and that they don&#39;t stomp</span>
+<span class="n">key</span> <span class="o">=</span> <span class="mi">123</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">dbn_writer</span><span class="p">(</span><span class="n">positions</span><span class="o">=</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)})</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">variablePositions</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">dbn_writer</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)})</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">variablePositions</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">variablePositions</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">has_positions</span><span class="p">(</span><span class="n">writer</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
     </div>

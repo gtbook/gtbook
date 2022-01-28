@@ -6,7 +6,7 @@ __all__ = ['show', 'pretty', 'randomImages', 'ROBOTS']
 import gtsam
 import graphviz
 from .discrete import Variables
-from .dbn import dbn_writer
+from .dbn import dbn_writer, has_positions
 
 
 # Cell
@@ -18,18 +18,23 @@ class show(graphviz.Source):
         # This small class takes an object, calls its dot function, and uses the
         # resulting string to initialize a graphviz.Source instance. This in turn
         # has a _repr_mimebundle_ method, which then renders it in the notebook.
+        engine = "dot"
+
+        # Check for Variables argument
         if args and isinstance(args[0], Variables):
             assert len(args) == 1, "Variables must be only positional argument."
-            keyFormatter = args[0].keyFormatter()
-            # Special treatment of DBN positions
-            engine = "dot"
-            writer = dbn_writer(obj, **kwargs)
-            if writer is not None:
+            args = [args[0].keyFormatter()]
+
+        # Check if a DotWriter needs creating (or amending)
+        writer = dbn_writer(**kwargs)
+        if writer is not None:
+            kwargs = {"writer": writer}
+            if has_positions(writer):
                 engine = "neato"
-                kwargs["writer"] = writer
-            super().__init__(obj.dot(keyFormatter, **kwargs), engine=engine)
         else:
-            super().__init__(obj.dot(*args, **kwargs))
+            kwargs = {}
+
+        super().__init__(obj.dot(*args, **kwargs), engine=engine)
 
 
 # Cell
