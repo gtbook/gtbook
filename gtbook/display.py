@@ -34,6 +34,9 @@ class show(graphviz.Source):
         else:
             kwargs = {}
 
+        # also switch to neato if NonlinearFactprGraph, as needs values always
+        if isinstance(obj, gtsam.NonlinearFactorGraph):
+            engine = "neato"
         super().__init__(obj.dot(*args, **kwargs), engine=engine)
 
 
@@ -46,18 +49,18 @@ class pretty:
             assert len(args) == 1, "Variables must be only argument."
             variables = args[0]
             if isinstance(obj, gtsam.DiscreteValues):
-                self._md = variables.values_html(obj)
+                self._html = variables.values_html(obj)
             else:
-                self._md = obj._repr_html_(
+                self._html = obj._repr_html_(
                     variables.keyFormatter(), variables.names())
         else:
             if isinstance(obj, gtsam.DiscreteValues):
-                self._md = f"{obj}"
+                self._html = f"{obj}"
             else:
-                self._md = obj._repr_html_(*args)
+                self._html = obj._repr_html_(*args)
 
     def _repr_html_(self):
-        return self._md
+        return self._html
 
 
 # Cell

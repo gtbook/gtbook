@@ -21,6 +21,15 @@ entries:
     - output: web,pdf
       title: Displaying objects in notebooks
       url: display.html
+    - output: web,pdf
+      title: Some HTML Utilities
+      url: html.html
+    - output: web,pdf
+      title: Utilities for Linear Inference
+      url: linear.html
+    - output: web,pdf
+      title: Logistics/warehouse Chapter
+      url: logistics.html
     output: web
     title: gtbook
   output: web

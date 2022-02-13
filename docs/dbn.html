@@ -54,7 +54,7 @@ nb_path: "dbn.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="dbn_writer" class="doc_header"><code>dbn_writer</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/dbn.py#L9" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>dbn_writer</code>(<strong><code>writer</code></strong>=<em><code>None</code></em>, <strong><code>hints</code></strong>:<code>dict</code>=<em><code>None</code></em>, <strong><code>positions</code></strong>:<code>dict</code>=<em><code>None</code></em>, <strong><code>boxes</code></strong>:<code>set</code>=<em><code>None</code></em>, <strong>**<code>kwargs</code></strong>)</p>
+<h4 id="dbn_writer" class="doc_header"><code>dbn_writer</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/dbn.py#L12" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>dbn_writer</code>(<strong><code>writer</code></strong>=<em><code>None</code></em>, <strong><code>hints</code></strong>:<code>dict</code>=<em><code>None</code></em>, <strong><code>positions</code></strong>:<code>dict</code>=<em><code>None</code></em>, <strong><code>boxes</code></strong>:<code>set</code>=<em><code>None</code></em>, <strong><code>factor_positions</code></strong>:<code>dict</code>=<em><code>None</code></em>, <strong><code>binary_edges</code></strong>=<em><code>False</code></em>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
 <p>Create a DotWriter depending on input arguments:
 If writer is supplied, we will add but not overwrite hints or positions.</p>
@@ -80,7 +80,7 @@ If writer is supplied, we will add but not overwrite hints or positions.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="has_positions" class="doc_header"><code>has_positions</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/dbn.py#L43" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>has_positions</code>(<strong><code>writer</code></strong>)</p>
+<h4 id="has_positions" class="doc_header"><code>has_positions</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/dbn.py#L60" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>has_positions</code>(<strong><code>writer</code></strong>)</p>
 </blockquote>
 <p>Check if writer has positions for engine selection</p>
 
@@ -112,7 +112,7 @@ If writer is supplied, we will add but not overwrite hints or positions.</p>
 <span class="k">assert</span> <span class="n">dbn_writer</span><span class="p">(</span><span class="n">exact</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
 
 <span class="c1"># Check passthrough</span>
-<span class="n">writer</span> <span class="o">=</span> <span class="n">gtsam</span><span class="o">.</span><span class="n">DotWriter</span><span class="p">()</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">GraphvizFormatting</span><span class="p">()</span>
 <span class="n">test_eq</span><span class="p">(</span><span class="n">dbn_writer</span><span class="p">(</span><span class="n">writer</span><span class="p">),</span> <span class="n">writer</span><span class="p">)</span>
 <span class="n">test_eq</span><span class="p">(</span><span class="n">has_positions</span><span class="p">(</span><span class="n">writer</span><span class="p">),</span> <span class="kc">False</span><span class="p">)</span>
 
@@ -137,6 +137,15 @@ If writer is supplied, we will add but not overwrite hints or positions.</p>
 <span class="n">writer</span> <span class="o">=</span> <span class="n">dbn_writer</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)})</span>
 <span class="n">test_eq</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">variablePositions</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">test_eq</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">variablePositions</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">has_positions</span><span class="p">(</span><span class="n">writer</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Check factor positions, and that they don&#39;t stomp</span>
+<span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">dbn_writer</span><span class="p">(</span><span class="n">factor_positions</span><span class="o">=</span><span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)})</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">factorPositions</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">dbn_writer</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">factor_positions</span><span class="o">=</span><span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)})</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">factorPositions</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">factorPositions</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
 <span class="n">test_eq</span><span class="p">(</span><span class="n">has_positions</span><span class="p">(</span><span class="n">writer</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
