@@ -50,7 +50,7 @@ class Variables:
             domain (List[str]): names for the different values.
 
         Returns:
-            List[DiscreteKey], i.e., [(gtsam.Key, cardinality)]
+            Dict[int, DiscreteKey], i.e., [(gtsam.Key, cardinality)]
         """
         assert len(character) == 1, "discrete_series: requires character only"
         n = len(domain)

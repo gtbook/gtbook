@@ -3,6 +3,7 @@
 __all__ = ['show', 'pretty', 'randomImages', 'ROBOTS']
 
 # Cell
+import math
 import gtsam
 import graphviz
 from .discrete import Variables
@@ -56,6 +57,11 @@ class pretty:
         else:
             if isinstance(obj, gtsam.DiscreteValues):
                 self._html = f"{obj}"
+            elif isinstance(obj, gtsam.Pose2):
+                x = round(obj.x(), 2)
+                y = round(obj.y(), 2)
+                theta = round(math.degrees(obj.theta()), 2)
+                self._html = f"(x={x}, y={y}, theta={theta})"
             else:
                 self._html = obj._repr_html_(*args)
 

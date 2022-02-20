@@ -3,6 +3,7 @@
     "Overview": "/",
     "CLI tools": "cli.html",
     "Support code for Dynamic Bayes Nets": "dbn.html",
+    "Differential Drive Chapter": "diffdrive.html",
     "Utilities for Discrete Inference": "discrete.html",
     "Displaying objects in notebooks": "display.html",
     "Some HTML Utilities": "html.html",

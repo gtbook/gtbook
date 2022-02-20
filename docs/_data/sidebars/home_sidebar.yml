@@ -16,6 +16,9 @@ entries:
       title: Support code for Dynamic Bayes Nets
       url: dbn.html
     - output: web,pdf
+      title: Differential Drive Chapter
+      url: diffdrive.html
+    - output: web,pdf
       title: Utilities for Discrete Inference
       url: discrete.html
     - output: web,pdf
