@@ -53,7 +53,7 @@ nb_path: "diffdrive.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="axes" class="doc_header"><code>axes</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/diffdrive.py#L13" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>axes</code>(<strong><code>length</code></strong>=<em><code>1.5</code></em>)</p>
+<h4 id="axes" class="doc_header"><code>axes</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/diffdrive.py#L14" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>axes</code>(<strong><code>length</code></strong>=<em><code>1.5</code></em>)</p>
 </blockquote>
 <p>Add axes to a plotly figure</p>
 
@@ -78,7 +78,7 @@ nb_path: "diffdrive.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="plane" class="doc_header"><code>plane</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/diffdrive.py#L22" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>plane</code>(<strong><code>Z</code></strong>:<code>float</code>)</p>
+<h4 id="plane" class="doc_header"><code>plane</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/diffdrive.py#L23" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>plane</code>(<strong><code>Z</code></strong>:<code>float</code>)</p>
 </blockquote>
 
 </div>
@@ -102,7 +102,7 @@ nb_path: "diffdrive.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="ray" class="doc_header"><code>ray</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/diffdrive.py#L30" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>ray</code>(<strong><code>point3</code></strong>, <strong><code>F</code></strong>, <strong><code>color</code></strong>=<em><code>'orange'</code></em>)</p>
+<h4 id="ray" class="doc_header"><code>ray</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/diffdrive.py#L31" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>ray</code>(<strong><code>point3</code></strong>, <strong><code>F</code></strong>, <strong><code>color</code></strong>=<em><code>'orange'</code></em>)</p>
 </blockquote>
 
 </div>
@@ -126,7 +126,7 @@ nb_path: "diffdrive.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="show_3d" class="doc_header"><code>show_3d</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/diffdrive.py#L35" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>show_3d</code>(<strong><code>fig</code></strong>)</p>
+<h4 id="show_3d" class="doc_header"><code>show_3d</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/diffdrive.py#L36" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>show_3d</code>(<strong><code>fig</code></strong>)</p>
 </blockquote>
 
 </div>
@@ -201,6 +201,77 @@ nb_path: "diffdrive.ipynb"
 
 
 
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Reading-Images">Reading Images<a class="anchor-link" href="#Reading-Images"> </a></h2>
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="read_image" class="doc_header"><code>read_image</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/diffdrive.py#L46" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>read_image</code>(<strong><code>image_name</code></strong>)</p>
+</blockquote>
+<p>Read image from a the book repo</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">image_name</span> <span class="o">=</span> <span class="s2">&quot;LL_color_1201754063.387872.bmp&quot;</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">image_name</span><span class="p">)</span> <span class="c1"># locally: PIL.Image.open(image_name)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;resolution = </span><span class="si">{</span><span class="n">image</span><span class="o">.</span><span class="n">width</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">image</span><span class="o">.</span><span class="n">height</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>resolution = 512x384
+</pre>
+</div>
 </div>
 
 </div>
