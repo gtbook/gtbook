@@ -6,7 +6,7 @@ dependencies:
 - pandas
 - python-graphviz
 - pillow
-- torch
+- pytorch
 - pip
 - pip:
   - nbdev
