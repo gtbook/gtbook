@@ -25,6 +25,9 @@ entries:
       title: Displaying objects in notebooks
       url: display.html
     - output: web,pdf
+      title: Driving Chapter
+      url: driving.html
+    - output: web,pdf
       title: Some HTML Utilities
       url: html.html
     - output: web,pdf
