@@ -5,6 +5,7 @@ dependencies:
 - jupyter
 - pandas
 - python-graphviz
+- matplotlib
 - pillow
 - pytorch
 - pip
