@@ -29,13 +29,6 @@ nb_path: "driving.ipynb"
 </div>
     {% endraw %}
 
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-    {% endraw %}
-
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Reading-LIDAR-scan-from-ply-file">Reading LIDAR scan from ply file<a class="anchor-link" href="#Reading-LIDAR-scan-from-ply-file"> </a></h2>
@@ -53,9 +46,10 @@ nb_path: "driving.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="read_ply" class="doc_header"><code>read_ply</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L46" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>read_ply</code>(<strong><code>filename</code></strong>)</p>
+<h4 id="read_ply" class="doc_header"><code>read_ply</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L43" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>read_ply</code>(<strong><code>filename</code></strong>:<code>str</code>)</p>
 </blockquote>
-<p>Read a binary_little_endian .ply file and return data as a dict.</p>
+<p>Read a binary_little_endian .ply file and return data as a dict.
+    Note: Adapted from pyntcloud under MIT license</p>
 <p>Parameters:
     filename: of ply file</p>
 <p>Returns:
@@ -87,7 +81,10 @@ nb_path: "driving.ipynb"
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;test/PC_315967795019746000.ply&#39;</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">read_ply</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-<span class="n">test_eq</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]),</span> <span class="mi">86651</span><span class="p">)</span>
+<span class="n">points</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="c1"># a dataframe</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="mi">86651</span><span class="p">)</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;intensity&#39;</span><span class="p">,</span> <span class="s1">&#39;laser_number&#39;</span><span class="p">])</span>
 </pre></div>
 
     </div>
@@ -111,7 +108,7 @@ nb_path: "driving.ipynb"
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">points</span>
 </pre></div>
 
     </div>
@@ -271,7 +268,7 @@ nb_path: "driving.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="read_lidar_points" class="doc_header"><code>read_lidar_points</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L137" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>read_lidar_points</code>(<strong><code>filename</code></strong>)</p>
+<h4 id="read_lidar_points" class="doc_header"><code>read_lidar_points</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L134" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>read_lidar_points</code>(<strong><code>filename</code></strong>:<code>str</code>)</p>
 </blockquote>
 <p>Read 3D points in LIDAR scan stored as a binary_little_endian .ply file.</p>
 <p>Parameters:
@@ -332,9 +329,12 @@ nb_path: "driving.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="cloud_layout" class="doc_header"><code>cloud_layout</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L156" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>cloud_layout</code>(<strong><code>show_grid_lines</code></strong>)</p>
+<h4 id="cloud_layout" class="doc_header"><code>cloud_layout</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L153" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>cloud_layout</code>(<strong><code>show_grid_lines</code></strong>:<code>bool</code>)</p>
 </blockquote>
-<p>Create layout for showing clouds.</p>
+<p>Create layout for showing clouds.
+    Adapted from code by 3630 TAs Binit Shah and Jerred Chen</p>
+<p>Parameters:
+    show_grid_lines (bool): plots gridlines</p>
 
 </div>
 
@@ -364,9 +364,46 @@ nb_path: "driving.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="visualize_cloud" class="doc_header"><code>visualize_cloud</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L198" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>visualize_cloud</code>(<strong><code>cloud</code></strong>, <strong><code>show_grid_lines</code></strong>=<em><code>False</code></em>, <strong><code>color</code></strong>=<em><code>'#90FF90'</code></em>, <strong><code>marker_size</code></strong>=<em><code>1</code></em>, <strong><code>fraction</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="cloud_data" class="doc_header"><code>cloud_data</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L200" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>cloud_data</code>(<strong><code>cloud</code></strong>:<code>ndarray</code>, <strong><code>fraction</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
-<p>Visualizes point cloud in 3D scatter plot.</p>
+<p>Return dictionary with x, y, z components.
+    Adapted from code by 3630 TAs Binit Shah and Jerred Chen</p>
+<p>Args:
+    cloud (np.ndarray):     point cloud, a (3, num_points) numpy array
+    fraction (double):      take only a fraction of the points</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="visualize_cloud" class="doc_header"><code>visualize_cloud</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L219" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>visualize_cloud</code>(<strong><code>cloud</code></strong>:<code>ndarray</code>, <strong><code>show_grid_lines</code></strong>:<code>bool</code>=<em><code>False</code></em>, <strong><code>color</code></strong>:<code>str</code>=<em><code>'#90FF90'</code></em>, <strong><code>marker_size</code></strong>:<code>int</code>=<em><code>1</code></em>, <strong><code>fraction</code></strong>=<em><code>None</code></em>)</p>
+</blockquote>
+<p>Visualizes point cloud in 3D scatter plot.
+    Adapted from code by 3630 TAs Binit Shah and Jerred Chen</p>
 <p>Args:
     cloud (np.ndarray):     point cloud, a (3, num_points) numpy array
     show_grid_lines (bool): plots gridlines
@@ -432,45 +469,11 @@ nb_path: "driving.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="gen_color_palette" class="doc_header"><code>gen_color_palette</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L246" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>gen_color_palette</code>(<strong><code>n</code></strong>)</p>
-</blockquote>
-<p>Generates a hex color palette of size n, without repeats
-and only light colors (easily visible on dark background).</p>
-<p>Args:
-    n (int): number of clouds, each cloud gets a unique color</p>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4 id="visualize_clouds" class="doc_header"><code>visualize_clouds</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L262" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>visualize_clouds</code>(<strong><code>clouds</code></strong>, <strong><code>show_grid_lines</code></strong>=<em><code>False</code></em>, <strong><code>cloud_colors</code></strong>=<em><code>None</code></em>, <strong><code>marker_size</code></strong>=<em><code>1</code></em>, <strong><code>do_subsampling</code></strong>=<em><code>True</code></em>)</p>
+<h4 id="visualize_clouds" class="doc_header"><code>visualize_clouds</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L278" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>visualize_clouds</code>(<strong><code>clouds</code></strong>:<code>list</code>, <strong><code>show_grid_lines</code></strong>:<code>bool</code>=<em><code>False</code></em>, <strong><code>cloud_colors</code></strong>=<em><code>None</code></em>, <strong><code>marker_size</code></strong>:<code>int</code>=<em><code>1</code></em>, <strong><code>do_subsampling</code></strong>:<code>bool</code>=<em><code>True</code></em>)</p>
 </blockquote>
 <p>Visualizes cloud(s) in a iterative 3D plot.
-Due to browser limitations, rendering above 5 frames requires
+    Adapted from code by 3630 TAs Binit Shah and Jerred Chen</p>
+<p>Due to browser limitations, rendering above 5 frames requires
 subsampling of the point clouds, which is done automatically.</p>
 <p>Example input of arg:
 clouds = [clouda, cloudb, cloudc]
@@ -509,7 +512,7 @@ cloud[0] are the x coordinates, cloud[1] is y, and cloud[2] is z.</p>
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">scan2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">scan</span><span class="p">)</span>
 <span class="n">scan2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">30</span>
-<span class="n">visualize_clouds</span><span class="p">([</span><span class="n">scan</span><span class="p">,</span><span class="n">scan2</span><span class="p">],</span> <span class="n">show_grid_lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">visualize_clouds</span><span class="p">([</span><span class="n">scan</span><span class="p">,</span><span class="n">scan2</span><span class="p">],</span> <span class="n">show_grid_lines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">do_subsampling</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -543,9 +546,10 @@ cloud[0] are the x coordinates, cloud[1] is y, and cloud[2] is z.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="animation_layout" class="doc_header"><code>animation_layout</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L315" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>animation_layout</code>(<strong><code>clouds_labels</code></strong>, <strong><code>speed</code></strong>)</p>
+<h4 id="animation_layout" class="doc_header"><code>animation_layout</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L330" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>animation_layout</code>(<strong><code>clouds_labels</code></strong>:<code>list</code>, <strong><code>speed</code></strong>)</p>
 </blockquote>
-<p>Setup layout for animation.</p>
+<p>Setup layout for animation.
+Adapted from code by 3630 TAs Binit Shah and Jerred Chen</p>
 
 </div>
 
@@ -575,10 +579,11 @@ cloud[0] are the x coordinates, cloud[1] is y, and cloud[2] is z.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="visualize_clouds_animation" class="doc_header"><code>visualize_clouds_animation</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L374" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>visualize_clouds_animation</code>(<strong><code>clouds_series</code></strong>, <strong><code>clouds_labels</code></strong>=<em><code>None</code></em>, <strong><code>show_grid_lines</code></strong>=<em><code>False</code></em>, <strong><code>speed</code></strong>=<em><code>100</code></em>, <strong><code>cloud_colors</code></strong>=<em><code>None</code></em>, <strong><code>marker_size</code></strong>=<em><code>1</code></em>, <strong><code>do_subsampling</code></strong>=<em><code>True</code></em>)</p>
+<h4 id="visualize_clouds_animation" class="doc_header"><code>visualize_clouds_animation</code><a href="https://github.com/gtbook/gtbook/tree/master/gtbook/driving.py#L391" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>visualize_clouds_animation</code>(<strong><code>clouds_series</code></strong>:<code>list</code>, <strong><code>clouds_labels</code></strong>=<em><code>None</code></em>, <strong><code>show_grid_lines</code></strong>:<code>bool</code>=<em><code>False</code></em>, <strong><code>speed</code></strong>=<em><code>100</code></em>, <strong><code>cloud_colors</code></strong>=<em><code>None</code></em>, <strong><code>marker_size</code></strong>:<code>int</code>=<em><code>1</code></em>, <strong><code>do_subsampling</code></strong>:<code>bool</code>=<em><code>True</code></em>)</p>
 </blockquote>
 <p>Visualizes a cloud(s) series using a slider &amp; play/pause.
-Due to browser limitations, rendering above 5 frames requires
+    Adapted from code by 3630 TAs Binit Shah and Jerred Chen</p>
+<p>Due to browser limitations, rendering above 5 frames requires
 subsampling of the point clouds, which is done automatically.</p>
 <p>Example input of arg:
 clouds_series = [[clouda, cloudb], [clouda, cloudb]]
