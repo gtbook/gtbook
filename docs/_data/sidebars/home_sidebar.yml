@@ -28,6 +28,9 @@ entries:
       title: Driving Chapter
       url: driving.html
     - output: web,pdf
+      title: Drone Chapter
+      url: drone.html
+    - output: web,pdf
       title: Some HTML Utilities
       url: html.html
     - output: web,pdf
