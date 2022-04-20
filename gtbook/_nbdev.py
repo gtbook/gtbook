@@ -60,7 +60,12 @@ index = {"rename": "cli.ipynb",
          "rfid_range": "logistics.ipynb",
          "rfid_measurement": "logistics.ipynb",
          "out_of_rfid_range": "logistics.ipynb",
-         "out_of_bound_map": "logistics.ipynb"}
+         "out_of_bound_map": "logistics.ipynb",
+         "rooms": "vacuum.ipynb",
+         "action_space": "vacuum.ipynb",
+         "action_spec": "vacuum.ipynb",
+         "light_levels": "vacuum.ipynb",
+         "sensor_spec": "vacuum.ipynb"}
 
 modules = ["cli.py",
            "dbn.py",
@@ -71,7 +76,8 @@ modules = ["cli.py",
            "drone.py",
            "html.py",
            "linear.py",
-           "logistics.py"]
+           "logistics.py",
+           "vacuum.py"]
 
 doc_url = "https://gtbook.github.io//gtbook/"
 

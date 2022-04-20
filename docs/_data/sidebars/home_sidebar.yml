@@ -39,6 +39,9 @@ entries:
     - output: web,pdf
       title: Logistics/warehouse Chapter
       url: logistics.html
+    - output: web,pdf
+      title: Vacuuming Robot Chapter
+      url: vacuum.html
     output: web
     title: gtbook
   output: web
