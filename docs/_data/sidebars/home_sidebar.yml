@@ -31,6 +31,9 @@ entries:
       title: Drone Chapter
       url: drone.html
     - output: web,pdf
+      title: Prototyping Samplers for GTSAM
+      url: gaussian.html
+    - output: web,pdf
       title: Some HTML Utilities
       url: html.html
     - output: web,pdf
