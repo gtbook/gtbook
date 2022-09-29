@@ -1,9 +1,9 @@
 package:
   name: gtbook
-  version: 0.0.15
+  version: 0.0.30
 source:
-  sha256: 3f623df40c6078015543e087d02a6d6c8ce1232f162b38d07f26eaf623e2e91a
-  url: https://files.pythonhosted.org/packages/37/be/b9376cc1a1e5c7fd64798c85a1cef080aaf3e0c44e150c91402ed18ec9d3/gtbook-0.0.15.tar.gz
+  sha256: fe7372cc2ed2c74b290c8c01083ff79b0ecf7e336d25f12bdb8704f94904b060
+  url: https://files.pythonhosted.org/packages/d2/0d/62329fa396a77aa52f8a1c26e4b90af6549773fe8d315058192a14857cc0/gtbook-0.0.30.tar.gz
 about:
   dev_url: https://gtbook.github.io/
   doc_url: https://gtbook.github.io/
@@ -23,12 +23,20 @@ requirements:
   - pip
   - python
   - packaging
+  - pandas
   - python-graphviz
+  - matplotlib
+  - pillow
+  - pytorch
   run:
   - pip
   - python
   - packaging
+  - pandas
   - python-graphviz
+  - matplotlib
+  - pillow
+  - pytorch
 test:
   imports:
   - gtbook

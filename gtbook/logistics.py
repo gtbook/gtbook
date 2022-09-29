@@ -14,7 +14,7 @@ def gaussian(x: np.array, mean=np.zeros((2,)), cov=np.eye(2)):
     assert x.shape[-1] == 2, f"error: x has shape {x.shape}"
     k = math.sqrt(np.linalg.det(2*math.pi*cov))
     e = x - mean
-    E = np.sum(e * (e @ np.linalg.inv(cov)), axis=-1)
+    E = np.sum(0.5 * (e @ np.linalg.inv(cov) * e), axis=-1)
     return np.exp(-E)/k
 
 
