@@ -12,6 +12,6 @@ dependencies:
 - pip:
   - nbdev
   - fastcore>=1.3.27
-  - gtsam>=4.2a7
+  - gtsam>=4.2a8
   - plotly
   - requests
