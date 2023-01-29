@@ -40,3 +40,13 @@ Problems with nbdev2:
 
 - Somehow still wants to build the website in "docs"
 - "fixes" the notebooks in test, making cli test fail (commented out now). I committed them as I don't know how to prevent this. Correct files are at tag "nbdev1"
+
+Problems with circular dependency and issue [#3](https://github.com/gtbook/gtbook/issues/3), January 2023:
+
+- By adding the pybind stl header again in inference.h the typeError went away
+- building the wrapper in 3.8 leads to a circular dependency, however.
+- I created a version 4.2a9 to stabilize, and created a PR on gtsam-manylinux-build to build it. It builds and wheels were built for linux and mac-86.
+- I built 3 wheels for M1 with gtsam-build-m1.
+- uploaded all with twine, at https://pypi.org/project/gtsam/4.2a9/
+- changed dependence to 4.2a9
+- nbdev_prepare and nbdev_pypi
