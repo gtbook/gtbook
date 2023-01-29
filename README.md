@@ -12,7 +12,7 @@ In the book chapters, we should have a cell that fetches the latest version usin
 
 The above automatically installs other libraries on colab, e.g., gtsam and plotly.
 
-You also needs a cell that imports what you need in a particular section, for example:
+You also need a cell that imports what you need in a particular section, for example:
 
 ```python
 from gtbook.display import show
@@ -29,9 +29,14 @@ There are also some command line tools defined in the `cli` module.
 - Conda install nbdev
 - show preview using `nbdev_preview`
 - `pip install -e .` for local install for test purposes.
-- `nbdev_prepare` to prepare for git commit, but don't commit changes in test folder.
+- `nbdev_prepare` to prepare for git commit
 
 To release a new version:
 
 - nbdev_bump_version
 - make release
+
+Problems with nbdev2:
+
+- Somehow still wants to build the website in "docs"
+- "fixes" the notebooks in test, making cli test fail (commented out now). I committed them as I don't know how to prevent this. Correct files are at tag "nbdev1"
