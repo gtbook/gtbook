@@ -26,8 +26,8 @@ There are also some command line tools defined in the `cli` module.
 
 > Mostly for Frank as he adds to the library.
 
-- *Needs* `pip3 install -U nbdev`, not conda (has old version)
-- just do 'make' after changing any notebook.
+- Conda install nbdev
+- show preview using `nbdev_preview`
 - `pip install -e .` for local install for test purposes.
 
 To release a new version:
