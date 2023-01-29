@@ -1,0 +1,16 @@
+website:
+  sidebar:
+    contents:
+      - index.ipynb
+      - cli.ipynb
+      - dbn.ipynb
+      - diffdrive.ipynb
+      - discrete.ipynb
+      - display.ipynb
+      - driving.ipynb
+      - drone.ipynb
+      - gaussian.ipynb
+      - html.ipynb
+      - linear.ipynb
+      - logistics.ipynb
+      - vacuum.ipynb

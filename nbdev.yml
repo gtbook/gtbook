@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "gtbook"
+  site-url: "https://gtbook.github.io//gtbook/"
+  description: "Frank Dellaerts book support lib, made with nbdev"
+  repo-branch: master
+  repo-url: "https://github.com/gtbook/gtbook/tree/master/"

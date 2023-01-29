@@ -29,6 +29,7 @@ There are also some command line tools defined in the `cli` module.
 - Conda install nbdev
 - show preview using `nbdev_preview`
 - `pip install -e .` for local install for test purposes.
+- `nbdev_prepare` to prepare for git commit, but don't commit changes in test folder.
 
 To release a new version:
 
