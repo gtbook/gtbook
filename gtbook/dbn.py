@@ -3,10 +3,10 @@
 # %% auto 0
 __all__ = ['Axis', 'dbn_writer', 'has_positions']
 
-# %% ../dbn.ipynb 3
+# %% ../dbn.ipynb 4
 import gtsam
 
-# %% ../dbn.ipynb 5
+# %% ../dbn.ipynb 6
 from gtsam import GraphvizFormatting
 Axis = GraphvizFormatting.Axis
 

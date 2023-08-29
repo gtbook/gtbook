@@ -9,7 +9,7 @@ __all__ = ['rooms', 'action_space', 'action_spec', 'light_levels', 'sensor_spec'
 # %% ../vacuum.ipynb 5
 rooms = ["Living Room", "Kitchen", "Office", "Hallway", "Dining Room"]
 
-# %% ../vacuum.ipynb 7
+# %% ../vacuum.ipynb 8
 action_space = ["L", "R", "U", "D"]
 action_spec = """
     1/0/0/0/0 2/8/0/0/0 1/0/0/0/0 2/0/0/8/0
@@ -19,6 +19,6 @@ action_spec = """
     0/0/0/8/2 0/0/0/0/1 0/8/0/0/2 0/0/0/0/1
     """
 
-# %% ../vacuum.ipynb 9
+# %% ../vacuum.ipynb 13
 light_levels = ["dark", "medium", "light"]
 sensor_spec = "1/1/8 1/1/8 2/7/1 8/1/1 1/8/1"

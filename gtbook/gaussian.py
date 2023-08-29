@@ -3,13 +3,13 @@
 # %% auto 0
 __all__ = ['sample_conditional', 'sample_bayes_net']
 
-# %% ../gaussian.ipynb 3
+# %% ../gaussian.ipynb 4
 import gtsam
 import numpy as np
 import plotly.express as px
 import pandas as pd
 
-# %% ../gaussian.ipynb 4
+# %% ../gaussian.ipynb 5
 def sample_conditional(node: gtsam.GaussianConditional, N: int, parents: list = [], sample: dict = {}):
     """Sample from conditional """
     # every node ~ exp(0.5*|R x + S p - d|^2)

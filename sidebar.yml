@@ -2,15 +2,15 @@ website:
   sidebar:
     contents:
       - index.ipynb
-      - cli.ipynb
-      - dbn.ipynb
-      - diffdrive.ipynb
       - discrete.ipynb
-      - display.ipynb
+      - vacuum.ipynb
+      - logistics.ipynb
+      - diffdrive.ipynb
       - driving.ipynb
       - drone.ipynb
-      - gaussian.ipynb
+      - display.ipynb
       - html.ipynb
+      - dbn.ipynb
       - linear.ipynb
-      - logistics.ipynb
-      - vacuum.ipynb
+      - gaussian.ipynb
+      - cli.ipynb

@@ -18,13 +18,12 @@ def gaussian(x: np.array, mean=np.zeros((2,)), cov=np.eye(2)):
     E = np.sum(0.5 * (e @ np.linalg.inv(cov) * e), axis=-1)
     return np.exp(-E)/k
 
-# %% ../logistics.ipynb 7
+# %% ../logistics.ipynb 8
 X, Y = np.meshgrid(np.linspace(0, 99, 100), np.linspace(0, 49, 50))
 map_coords = np.dstack((X, Y))
 
-# %% ../logistics.ipynb 9
+# %% ../logistics.ipynb 12
 import plotly.express as px
-
 
 def show_map(image=None, markers=None, file: str = None, marker={}):
     """Show image on warehouse map, possibly with markers"""
@@ -41,7 +40,7 @@ def show_map(image=None, markers=None, file: str = None, marker={}):
     if file is not None:
         fig.write_image(file)
 
-# %% ../logistics.ipynb 12
+# %% ../logistics.ipynb 15
 shelf_width = 9
 shelf_gap = 8
 
@@ -51,17 +50,17 @@ side = (100 - shelf_width*4 - shelf_gap*3) // 2
 bottom = [[float(shelf_width)/2+side+i*spacing-0.5, 9.5] for i in range(4)]
 top = [[float(shelf_width)/2+side+i*spacing-0.5, 39.5] for i in range(4)]
 
-# %% ../logistics.ipynb 13
+# %% ../logistics.ipynb 16
 base_map = np.zeros((50, 100))
 for i in range(4):
     base_map[10:40, side+i*spacing:side+shelf_width+i*spacing] = 1
 
 beacons = np.array(bottom + top)
 
-# %% ../logistics.ipynb 20
+# %% ../logistics.ipynb 23
 proximity_range = 2  # what should be the proper proximity range ?
 
-# %% ../logistics.ipynb 21
+# %% ../logistics.ipynb 24
 proximity_map_on = np.zeros((50, 100))
 for i in range(4):
     proximity_map_on[10-proximity_range:40+proximity_range, side+i *
@@ -74,7 +73,7 @@ proximity_map_on[:, 0:proximity_range:] = 1
 for i in range(4):
     proximity_map_on[10:40, side+i*spacing:side+shelf_width+i*spacing] = 0
 
-# %% ../logistics.ipynb 23
+# %% ../logistics.ipynb 26
 proximity_map_off = np.full((50, 100), 1)
 for i in range(4):
     proximity_map_off[10-proximity_range:40+proximity_range, side+i *
@@ -88,7 +87,7 @@ proximity_map_off[-proximity_range:] = 0
 proximity_map_off[:, -proximity_range:] = 0
 proximity_map_off[:, 0:proximity_range:] = 0
 
-# %% ../logistics.ipynb 26
+# %% ../logistics.ipynb 29
 def rfid_range(position, beacon, max_range=8):
     """Return range to given beacon."""
     range = np.linalg.norm(position-beacon)

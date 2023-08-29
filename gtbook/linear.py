@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['vv', 'denoising_MRF']
 
-# %% ../linear.ipynb 2
+# %% ../linear.ipynb 3
 import numpy as np
 import gtsam
 from gtsam import noiseModel
@@ -11,7 +11,7 @@ from .display import show
 
 from typing import Dict
 
-# %% ../linear.ipynb 5
+# %% ../linear.ipynb 6
 def vv(keys_vectors: Dict[int, np.ndarray]):
     """Create a VectorValues from a dict"""
     result = gtsam.VectorValues()
@@ -19,7 +19,7 @@ def vv(keys_vectors: Dict[int, np.ndarray]):
         result.insert(j, v)
     return result
 
-# %% ../linear.ipynb 9
+# %% ../linear.ipynb 10
 def denoising_MRF(M: int, N: int, sigma = 0.5, smoothness_sigma=0.5):
     """Create MxN MRF
         @returns graph and symbols used for rows.
@@ -53,5 +53,5 @@ def denoising_MRF(M: int, N: int, sigma = 0.5, smoothness_sigma=0.5):
 
     return graph, row_symbols
 
-# %% ../linear.ipynb 12
+# %% ../linear.ipynb 13
 #| export
