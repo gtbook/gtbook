@@ -1,5 +1,5 @@
 # Conda environment file for CI and deployment
-name: gtbook
+name: nbdev2
 channels:
   - conda-forge
 dependencies:
