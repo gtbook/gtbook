@@ -57,10 +57,10 @@ for i in range(4):
 
 beacons = np.array(bottom + top)
 
-# %% ../logistics.ipynb 23
+# %% ../logistics.ipynb 24
 proximity_range = 2  # what should be the proper proximity range ?
 
-# %% ../logistics.ipynb 24
+# %% ../logistics.ipynb 25
 proximity_map_on = np.zeros((50, 100))
 for i in range(4):
     proximity_map_on[10-proximity_range:40+proximity_range, side+i *
@@ -73,7 +73,7 @@ proximity_map_on[:, 0:proximity_range:] = 1
 for i in range(4):
     proximity_map_on[10:40, side+i*spacing:side+shelf_width+i*spacing] = 0
 
-# %% ../logistics.ipynb 26
+# %% ../logistics.ipynb 27
 proximity_map_off = np.full((50, 100), 1)
 for i in range(4):
     proximity_map_off[10-proximity_range:40+proximity_range, side+i *
@@ -87,7 +87,7 @@ proximity_map_off[-proximity_range:] = 0
 proximity_map_off[:, -proximity_range:] = 0
 proximity_map_off[:, 0:proximity_range:] = 0
 
-# %% ../logistics.ipynb 29
+# %% ../logistics.ipynb 30
 def rfid_range(position, beacon, max_range=8):
     """Return range to given beacon."""
     range = np.linalg.norm(position-beacon)
