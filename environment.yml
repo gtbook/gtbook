@@ -5,6 +5,7 @@ channels:
 dependencies:
   - python-graphviz
   - pandas
+  - plotly
   - matplotlib
   - pillow # section 5.3 etc..
   - pytorch
