@@ -3,8 +3,6 @@ name: gtbook
 channels:
   - conda-forge
 dependencies:
-  - python=3.8
-  - black
   - python-graphviz
   - pandas
   - matplotlib
