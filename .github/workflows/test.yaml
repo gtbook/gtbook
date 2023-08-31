@@ -6,7 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Activate conda env with environment.yml
-        if: env.CONDA_LOCK == 'false'
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: false
