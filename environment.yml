@@ -9,9 +9,5 @@ dependencies:
   - pillow # section 5.3 etc..
   - pytorch
   - nbformat
+  - nbdev
   - pip
-  - pip:
-      - gtsam>=4.2a9
-      - plotly==5.5.0 # in pip for binder
-      - requests
-      - kaleido # needed for png output :-(
