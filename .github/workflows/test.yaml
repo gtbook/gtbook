@@ -4,4 +4,16 @@ on:  [workflow_dispatch, pull_request, push]
 jobs:
   test:
     runs-on: ubuntu-latest
-    steps: [uses: fastai/workflows/nbdev-ci@master]
+    steps:
+      - name: Activate conda env with environment.yml
+        if: env.CONDA_LOCK == 'false'
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: false
+          auto-activate-base: false
+          activate-environment: gtbook
+          python-version: 3.9
+          environment-file: environment.yml
+
+      - uses: fastai/workflows/nbdev-ci@master
+

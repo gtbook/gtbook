@@ -1,0 +1,19 @@
+# Conda environment file for CI and deployment
+name: gtbook
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8
+  - black
+  - python-graphviz
+  - pandas
+  - matplotlib
+  - pillow # section 5.3 etc..
+  - pytorch
+  - nbformat
+  - pip
+  - pip:
+      - gtsam>=4.2a9
+      - plotly==5.5.0 # in pip for binder
+      - requests
+      - kaleido # needed for png output :-(
