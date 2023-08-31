@@ -9,5 +9,4 @@ dependencies:
   - pillow # section 5.3 etc..
   - pytorch
   - nbformat
-  - nbdev
   - pip

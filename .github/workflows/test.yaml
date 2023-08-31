@@ -17,6 +17,10 @@ jobs:
           python-version: 3.9
           environment-file: environment.yml
 
+      - name: Install nbdev
+        run: |
+          pip install -U nbdev
+
       - name: Doing editable install
         run: |
           test -f setup.py && pip install -e ".[dev]"
