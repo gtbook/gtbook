@@ -10,9 +10,8 @@ import PIL
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import plotly.io as pio
 
-# %% ../diffdrive.ipynb 6
+# %% ../diffdrive.ipynb 7
 def axes(length=1.5):
     """Add axes to a plotly figure"""
     return [
@@ -40,17 +39,17 @@ def show_3d(fig):
     fig.update_layout(scene_camera=camera, margin=dict(t=0, r=0, l=0, b=0), title="Pinhole Camera Model", showlegend=False)
     fig.show()
 
-# %% ../diffdrive.ipynb 10
+# %% ../diffdrive.ipynb 11
 import PIL
 import requests
 
-# %% ../diffdrive.ipynb 11
+# %% ../diffdrive.ipynb 12
 def read_image(image_name):
     """Read image from a the book repo"""
     url = f"https://raw.githubusercontent.com/gtbook/robotics/main/Figures5/{image_name}"
     return PIL.Image.open(requests.get(url, stream=True).raw)
 
-# %% ../diffdrive.ipynb 18
+# %% ../diffdrive.ipynb 19
 import torch
 
 def conv2(input, filter):

@@ -10,7 +10,7 @@ import plotly.express as px
 import pandas as pd
 import gtsam
 
-# %% ../drone.ipynb 5
+# %% ../drone.ipynb 6
 def axes_figure(pose: gtsam.Pose3, scale: float = 1.0, labels: list = ["X", "Y", "Z"]):
     """Create plotly express figure with Pose3 coordinate frame."""
     t = np.reshape(pose.translation(),(3,1))
