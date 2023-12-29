@@ -3,6 +3,7 @@ name: nbdev2
 channels:
   - conda-forge
 dependencies:
+  - python=3.9
   - python-graphviz
   - pandas
   - plotly
