@@ -22,6 +22,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 # %% ../nerf.ipynb 4
 WHITE = torch.full((3,), 1.0, dtype=torch.float)
+BLACK = torch.full((3,), 0.0, dtype=torch.float)
 DEVICE = (
     torch.device("cuda") if torch.cuda.is_available()
     else torch.device("mps") if torch.backends.mps.is_available()

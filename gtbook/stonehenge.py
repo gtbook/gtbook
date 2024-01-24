@@ -67,20 +67,20 @@ def calculate_intrinsics(image_size: tuple, camera_angle_x: float) -> np.ndarray
     f = W / (2 * np.tan(camera_angle_x/2))
     return np.array([[f, 0, W/2], [0, f, H/2], [0, 0, 1]])
 
-def extract_extrinsics(data: dict, index: int) -> np.ndarray:
-    """Extract the extrinsic matrix from the given data."""
-    wTc = np.array(data["frames"][index]["transform_matrix"]) # Make sure to use the index parameter
+def extract_extrinsics(camera_data: dict, index: int) -> np.ndarray:
+    """Extract the extrinsic matrix from the given camera_data."""
+    wTc = np.array(camera_data["frames"][index]["transform_matrix"]) # Make sure to use the index parameter
     t = wTc[:3, 3] # translation
     R = wTc[:3, :3] # rotation
     return np.hstack((R.T, -R.T @ t.reshape(-1, 1)))
 
-def extract_camera_matrix(data, index:int, image_size: tuple) -> np.ndarray:
+def extract_camera_matrix(camera_data, index:int, image_size: tuple) -> np.ndarray:
     """Read the 3x4 camera matrix associated with a training image."""
-    K = calculate_intrinsics(image_size, data['camera_angle_x'])
-    M = extract_extrinsics(data, index)
+    K = calculate_intrinsics(image_size, camera_data['camera_angle_x'])
+    M = extract_extrinsics(camera_data, index)
     return K @ M
 
-# %% ../stonehenge.ipynb 19
+# %% ../stonehenge.ipynb 24
 def calculate_rays(M: np.ndarray, image_size: tuple) -> tuple:
     """ Calculate a batch of rays associated with every pixel in a given image.
         When given size (W, H), returns two tensors of shape (H, W, 3) and (H, W, 3).
@@ -104,9 +104,17 @@ def calculate_rays(M: np.ndarray, image_size: tuple) -> tuple:
 
     return T, D
 
-# %% ../stonehenge.ipynb 27
-def create_rays(M = 199, downsampling_factor = 1):
-    """M: number of images."""
+# %% ../stonehenge.ipynb 34
+def create_rays(camera_data, M = 199, downsampling_factor = 1):
+    """Create rays for the training images.
+    Args:
+        camera_data: Dictionary containing the camera data.
+        M: Number of training images to use.
+        downsampling_factor: Downsampling factor to apply to the images.
+    Returns:
+        x_samples: Tensor of shape (M, H, W, 6) containing the origins and directions of the rays.
+        y_samples: Tensor of shape (M, H, W, 3) containing the color data for each pixel.
+    """
     W, H = read_training_image(0, downsampling_factor).size
 
     # Pre-allocate tensors
@@ -116,7 +124,7 @@ def create_rays(M = 199, downsampling_factor = 1):
     for i in range(M):
         image = read_training_image(i, downsampling_factor)  # Get the i-th image
 
-        M = extract_camera_matrix(data, i, image.size)
+        M = extract_camera_matrix(camera_data, i, image.size)
         origins, directions = calculate_rays(M, image.size)
         origins = origins.astype(np.float32)
         directions = directions.astype(np.float32)
@@ -130,7 +138,7 @@ def create_rays(M = 199, downsampling_factor = 1):
     # Convert to float32 and return:
     return x_samples, y_samples
 
-# %% ../stonehenge.ipynb 30
+# %% ../stonehenge.ipynb 37
 def load_npz_from_url(url):
     """
     Loads a .npz file from the given URL and returns the contained arrays as a tuple.
@@ -159,7 +167,7 @@ def load_npz_from_url(url):
         print(f"Request failed: {e}")
         return None
 
-# %% ../stonehenge.ipynb 32
+# %% ../stonehenge.ipynb 39
 def download_rays(M=100, downsampling_factor=4):
     url = f'{URL}/training_rays-{M}-{downsampling_factor}.npz'
     return load_npz_from_url(url)
