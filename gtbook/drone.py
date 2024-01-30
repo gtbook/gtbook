@@ -2,7 +2,7 @@
 
 # %% auto 0
 __all__ = ['ChebyshevFactor', 'axes_figure', 'axes', 'create_random_map', 'displaced_gaussian', 'gaussian_kernel',
-           'gaussian_filter', 'sobel_kernels', 'SmoothTrajectory', 'show_executed']
+           'gaussian_filter', 'sobel_kernels', 'SmoothTrajectory', 'show_executed', 'Drone']
 
 # %% ../drone.ipynb 3
 import math
@@ -11,6 +11,7 @@ import plotly.express as px
 import pandas as pd
 import gtsam
 import torch
+from dataclasses import dataclass
 
 # %% ../drone.ipynb 6
 def axes_figure(pose: gtsam.Pose3, scale: float = 1.0, labels: list = ["X", "Y", "Z"]):
@@ -219,3 +220,71 @@ def show_executed(desired_rn:np.ndarray, rn:np.ndarray, nRb: np.ndarray, K:int, 
     fig.update_layout(scene_aspectmode='data', showlegend=False)
     fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
     return fig
+
+# %% ../drone.ipynb 23
+@dataclass
+class Drone:
+    """A simple drone model with 6DOF dynamics."""
+
+    # State
+    rn: gtsam.Point3
+    vn: gtsam.Point3
+    nRb: gtsam.Rot3
+    wb: gtsam.Point3
+
+    # Parameters
+    g: float = 9.81
+    mass: float = 1.0
+    k_d: float = 0.0425                        # drag coefficient
+    I_xy: float = 4 * 0.15 * mass * 0.1**2     # All 4 motors contribute to I_xy
+    I_z: float = 4 * 0.15 * mass * 2 * 0.1**2  # I_z leverages longer arm
+
+    # Derived constants
+    gn: np.ndarray = gtsam.Point3(0, 0, -g)    # gravity vector in navigation frame.
+    I = np.diag([I_xy, I_xy, I_z])             # Inertia matrix
+
+    def __repr__(self) -> str:
+        return f"Drone:\nrn={self.rn}\nvn={self.vn}\nnRb={self.nRb}wb={self.wb}"
+
+    def pose(self):
+        """Return the current pose of the drone."""
+        return gtsam.Pose3(self.nRb, self.rn)
+        
+    def integrate_thrust_vector(self, Tn: np.ndarray, dt=1.0):
+        """Integrate a thrust vector in navigation frame."""
+        # Calculate net force including gravity and drag:
+        drag_force = -self.k_d * self.vn * np.linalg.norm(self.vn)
+        net_force = Tn + self.gn + drag_force
+        
+        # Integrate force to update velocity navigation frame:
+        self.vn += net_force * dt / self.mass
+
+    def integrate_torque(self, tau:gtsam.Point3, dt=1.0):
+        """Integrate equations of motion given dynamic inputs f and tau."""
+        # rotational drag, assume 10x smaller linearly proportional to angular velocity:
+        net_tau = tau - 0.1 * self.k_d * self.wb
+
+        # Integrate angular velocity in body frame:
+        self.wb[0] += net_tau[0] * dt / self.I_xy
+        self.wb[1] += net_tau[1] * dt / self.I_xy
+        self.wb[2] += net_tau[2] * dt / self.I_z
+
+    def integrate_kinematics(self, dt):
+        """Integrate kinematics given current velocities vn and wb."""
+        self.rn += self.vn * dt  # integrate position
+        # calculate incremental rotation matrix using the exponential map
+        dR = gtsam.Rot3.Expmap(self.wb * dt)
+        self.nRb = self.nRb * dR  # integrate attitude
+        
+    def integrate(self, f: float, tau:gtsam.Point3, dt=1.0):
+        """Integrate equations of motion given dynamic inputs f and tau."""
+        # Calculate thrust vector in navigation frame and integrate:
+        Tn = self.nRb.rotate(gtsam.Point3(0, 0, f))
+        self.integrate_thrust_vector(Tn, dt)
+
+        # integrate torque:
+        self.integrate_torque(tau, dt)
+        
+        # Integrate kinematics
+        self.integrate_kinematics(dt)
+
