@@ -240,7 +240,7 @@ class Drone:
     I_z: float = 4 * 0.15 * mass * 2 * 0.1**2  # I_z leverages longer arm
 
     # Derived constants
-    gn: np.ndarray = gtsam.Point3(0, 0, -g)    # gravity vector in navigation frame.
+    gn = gtsam.Point3(0, 0, -g)    # gravity vector in navigation frame.
     I = np.diag([I_xy, I_xy, I_z])             # Inertia matrix
 
     def __repr__(self) -> str:
