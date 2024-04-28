@@ -1,0 +1,592 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "gtbook",
+    "section": "",
+    "text": "The book can be found at https://www.roboticsbook.org and has the following chapters:\nThe structure of gtbook mirrors this organization, and then has a few more support modules for displaying graphs inside notebooks and for running the code in the book. The gtbook modules are listed above alongside the chapter.",
+    "crumbs": [
+      "gtbook"
+    ]
+  },
+  {
+    "objectID": "index.html#how-to-use",
+    "href": "index.html#how-to-use",
+    "title": "gtbook",
+    "section": "How to use",
+    "text": "How to use\nIn the book chapters, we should have a cell that fetches the latest version using pip:\n%pip install -q -U gtbook\nThe above automatically installs other libraries on colab, e.g., gtsam and plotly.\nYou also needs a cell that imports what you need in a particular section, for example:\nfrom gtbook.display import show\nfrom gtbook.discrete import Variables\nFurther usage examples of these and more functions are given in the module documentation itself.\nThere are also some command line tools defined in the cli module.",
+    "crumbs": [
+      "gtbook"
+    ]
+  },
+  {
+    "objectID": "index.html#notes-for-development",
+    "href": "index.html#notes-for-development",
+    "title": "gtbook",
+    "section": "Notes for development",
+    "text": "Notes for development\n\nMostly for Frank as he adds to the library.\n\n\nFor version 2 of nbdev in a local conda environment called nbdev2. It can be re-created with conda env create -f environment.yml.\nI used conda install -c fastai nbdev to install nbdev in there as well, but the github workflow uses pip install nbdev so I can just use one channel.\npip install -e . for local install of the remaining modules specified in the settings.ini file\nto preview the docs do nbdev_preview\nto push a new version, use nbdev_prepare and then push.\n\nTo release a new version:\n\nnbdev_bump_version\nnbdev_pypi",
+    "crumbs": [
+      "gtbook"
+    ]
+  },
+  {
+    "objectID": "nerf.html",
+    "href": "nerf.html",
+    "title": "nerf",
+    "section": "",
+    "text": "Most of the code is defined in the book as well, but here we more thoroughly test it.\n\n\nGiven a point \\(P\\) on the ray at a distance \\(t\\) from the origin \\(O\\), in the direction \\(D\\) is given as\n\\[\nP(t,O,D) = O + t  D\n\\]\n\ndef sample_along_ray(t_values, origins, directions):\n    \"\"\"Sample points along rays defined by origins and (unit-norm) directions.\"\"\"\n    return origins[..., None, :] + t_values[:, None] * directions[..., None, :]\n\nNotice that the way we implemented sample_along_ray takes care to handle arbitrary batches of origin/direction pairs, as long as their last dimensions is 3:\n\nt_values = torch.tensor([1, 2, 3, 4, 5])\norigins = torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])\ndirections = torch.tensor([[1.0, 0.0, 0.0], [1.0/ np.sqrt(2), 1.0/ np.sqrt(2), 0.0]])\n\nsamples = sample_along_ray(t_values, origins, directions)\n\ntest_eq(samples.shape, torch.Size([2, 5, 3]))\n\nThe last line above asserts that we sampled 2 rays for 5 different \\(t\\)-values, each of them being 3-dimensional points as expected.\n\n\n\nAssuming that we are given the densities \\(\\sigma_i\\) and colors \\(c_i\\) at \\(N\\) sampled points \\(P_i\\) on a ray corresponding to a given pixel, then we can calculate the color for the ray using the equation below,\n\\[\nC = \\sum_{i=1}^N T_i \\alpha_i c_i\n\\]\nwhere \\(T_i\\) is the transmittance:\n\\[\nT_i \\doteq \\exp ( - \\sum_{j=1}^{i-1} \\sigma_j)\n\\]\nThe transmittance \\(T_i\\) measures the lack of occlusion in the space between the \\(i^th\\) sample and the ray origin. The quantity \\(\\alpha_i\\), on the other hand, is the alpha value or opacity at the \\(i^th\\) sample, defined as\n\\[\n\\alpha_i \\doteq 1 - \\exp(-\\sigma_i).\n\\]\n\ndef render_along_ray(density, rgb, background=WHITE):\n    \"\"\"Compute the final rendered color given the density and RGB values.\"\"\"\n    alpha = 1 - torch.exp(-density)\n    cumulative_density = torch.cumsum(density, dim=-1)\n    trans = torch.exp(-cumulative_density)\n    trans = torch.cat([torch.ones_like(density[..., :1]), trans[..., :-1]], dim=-1)\n    \n    weights = alpha * trans\n    color_acc = torch.einsum('...i,...ij-&gt;...j', weights, rgb)\n    acc = weights.sum(dim=-1, keepdim=True)\n\n    return color_acc + (1.0 - acc) * background\n\nTest using randomly generated density and rgb inputs that have the same shape as our sampled rays from above, asserting that we indeed get two RGB colors as the end-result:\n\ndensity = torch.rand(2, 5) # Random density\nrgb = torch.rand(2, 5, 3) # Random colors (between 0 and 1)\nrendered = render_along_ray(density, rgb)\ntest_eq( rendered.shape, torch.Size([2, 3]))\nprint(rendered.detach().numpy())\n\n\n\n\n\ndef bracket(x, n):\n    \"\"\"Return the indices of the nearest grid points to x, as well as weights.\"\"\"\n    x0 = torch.floor(x).long()\n    X0 = torch.clamp(x0, min=0, max=(n - 1))\n    X1 = torch.clamp(x0 + 1, min=0, max=(n - 1))\n    return X0, X1, torch.clamp(x - x0.float(), min=0.0, max=1.0)\n\n\ndef interpolate(v0, v1, alpha):\n    \"\"\"Interpolate between v0 and v1 using alpha, using unsqueeze to properly handle batches.\"\"\"\n    return v0 * (1 - alpha.unsqueeze(-1)) + v1 * alpha.unsqueeze(-1)\n\nclass VoxelGrid(nn.Module):\n    def __init__(self, shape, d=1, max=1.0):\n        \"\"\"A 3D voxel grid with given `shape` with learnable values at the middle of the voxels.\"\"\"\n        super(VoxelGrid, self).__init__()\n        # Note that we store *corner* values, so we need one more point in each dimension:\n        storage_shape = tuple(s + 1 for s in shape)\n        self.grid = nn.Parameter(torch.rand(*storage_shape, d) * max)\n\n    def forward(self, P):\n        \"\"\"Implement trilinear interpolation at the points P.\"\"\"\n        x, y, z = P[..., 0], P[..., 1], P[..., 2]\n\n        # Get indices of the corners, clamping to the grid size where needed:\n        X0, X1, a = bracket(x, self.grid.shape[0])\n        Y0, Y1, b = bracket(y, self.grid.shape[1])\n        Z0, Z1, c = bracket(z, self.grid.shape[2])\n\n        # Interpolate in the x direction:\n        y0z0 = interpolate(self.grid[X0, Y0, Z0, :], self.grid[X1, Y0, Z0, :], a)\n        y1z0 = interpolate(self.grid[X0, Y1, Z0, :], self.grid[X1, Y1, Z0, :], a)\n        y0z1 = interpolate(self.grid[X0, Y0, Z1, :], self.grid[X1, Y0, Z1, :], a)\n        y1z1 = interpolate(self.grid[X0, Y1, Z1, :], self.grid[X1, Y1, Z1, :], a)\n\n        # Interpolate in the y direction:\n        z0 = interpolate(y0z0, y1z0, b)\n        z1 = interpolate(y0z1, y1z1, b)\n        \n        # Interpolate in the z direction:\n        return interpolate(z0, z1, c).squeeze(-1)\n\nThe code below initializes a VoxelGrid with random values, and then evaluates the a scalar function at a 3D point:\n\nvoxel_grid_module = VoxelGrid(shape=(6, 6, 6), d=1)\npoint = torch.Tensor([1.5, 2.7, 3.4])\noutput = voxel_grid_module(point)\nprint(f\"Interpolated Output: {output.item():.5f}\")\ntest_eq(output.shape, torch.Size([]))\n\nBelow we create a grid that interpolates a four-dimensional function (d=4), and evaluate it at a 2x2 batch x of 3D points:\n\nvoxel_grid_module = VoxelGrid(shape = (6, 6, 6), d=4)\n\nx = torch.Tensor([[[1.5, 2.7, 3.4], [2.3, 4.6, 1.1]], [[2.3, 4.6, 1.1], [2.3, 4.6, 1.1]]])\ny = voxel_grid_module(x)\ntest_eq(x.shape, torch.Size([2, 2, 3]))\ntest_eq(y.shape, torch.Size([2, 2, 4]))\nprint(\"Interpolated Output:\\n\", y.detach().numpy())\n\n\n\n\n\n@dataclass\nclass Config:\n    near: float = 0.5\n    far: float = 3.5\n    num_samples: int = 64\n    min_corner: tuple[float] = (-1.0, -1.0, -1.0)\n    max_corner: tuple[float] = (1.0, 1.0, 1.0)\n    shape: tuple[int] = (16, 16, 16)\n    background = WHITE\n\n\ndef sample_rays(t_values, rays, training=True):\n    \"\"\"Sample points along the rays, using the t_values defined in the constructor.\n        During training, add a small random scalar to t_values to prevent overfitting to the\n        discrete sampling locations.\n    \"\"\"\n    # Extract ray origins and directions from rays\n    origins = rays[..., :3].to(dtype=torch.float32)\n    directions = rays[..., 3:].to(dtype=torch.float32)\n\n    # Add a small random scalar to t_values during training\n    if training:\n        with torch.no_grad():\n            n = t_values.size(0)\n            random_scalar = (torch.rand(n) - 0.5) / n\n            actual_ts = t_values.clone() + random_scalar\n    else:\n        actual_ts = t_values.clone()\n\n    # Sample along the ray\n    return sample_along_ray(actual_ts, origins, directions)\n\n\nclass SimpleDVGO(nn.Module):\n    def __init__(self, config: Config = Config()):\n        \"\"\"Initialize voxel grids and bounding box corners.\"\"\"\n        super().__init__()  # Calling the superclass's __init__ method\n\n        # Initialize sampler parameters:\n        self.depths = torch.linspace(\n            config.near, config.far, config.num_samples + 1, dtype=torch.float32\n        )\n        self.t_values = 0.5 * (self.depths[1:] + self.depths[:-1])\n\n        # Set up conversion from scene coordinates to grid coordinates:\n        self.min = torch.tensor(config.min_corner, dtype=torch.float32)\n        self.max = torch.tensor(config.max_corner, dtype=torch.float32)\n        self.shape = torch.tensor(config.shape, dtype=torch.float32)\n\n        # Initialize differentiable voxel grids:\n        self.rgb_voxel_grid = VoxelGrid(config.shape, d=3, max=1.0)\n        self.density_voxel_grid = VoxelGrid(config.shape, d=1, max=0.001)\n\n        # Finally, record background color for rendering:\n        self.background = config.background\n\n    def forward(self, rays, training=True):\n        \"\"\"Perform volume rendering using the provided ray information.\"\"\"\n        samples = sample_rays(self.t_values, rays, training=training)\n\n        # Rescale to fit within the grid\n        rescaled = self.shape * (samples - self.min) / (self.max - self.min)\n\n        # Query Density Voxel Grid\n        density = torch.squeeze(self.density_voxel_grid(rescaled))\n        density = F.relu(density)\n\n        # Query RGB Voxel Grid\n        rgb = torch.clamp(self.rgb_voxel_grid(rescaled), 0.0, 1.0)\n\n        # Render\n        return render_along_ray(density, rgb, self.background)\n    \n    def alpha(self):\n        \"\"\"return the alpha for the density voxel grid\"\"\"\n        density = F.relu(self.density_voxel_grid.grid)\n        return 1 - torch.exp(-density)\n\nBelow we calculate the colors for 32 random rays, each with their origin and direction stacked into a 6-vector, so the input batch size is \\(32 \\times 6\\), and we expect an output batch size of RGB colors, i.e., \\(32 \\times 3\\):\n\n# Initialize renderer\ndvgo = SimpleDVGO()\n\nrays = torch.rand((32, 6))\ncolors = dvgo(rays)\n# Verify shape of the output\ntest_eq(colors.shape, torch.Size([32, 3]))\n\n\n\n\n\n# Fill the rgb grid with ramps of red, green, and blue values:\nX, Y, Z, _ = dvgo.rgb_voxel_grid.grid.shape\n\n# Create ramps for each channel\n# Each ramp is initially 1D, and we then unsqueeze to make it 4D with singleton dimensions where needed\nred_ramp = torch.linspace(0, 1, X).unsqueeze(-1).unsqueeze(-1)  # Size: [X, 1, 1]\ngreen_ramp = torch.linspace(0, 1, Y).unsqueeze(0).unsqueeze(-1)  # Size: [1, Y, 1]\nblue_ramp = torch.linspace(0, 1, Z).unsqueeze(0).unsqueeze(0)  # Size: [1, 1, Z]\n\n# When we assign these ramps to the grid, broadcasting will automatically expand them to the full size\ndvgo.rgb_voxel_grid.grid.data[:, :, :, 0] = red_ramp\ndvgo.rgb_voxel_grid.grid.data[:, :, :, 1] = green_ramp\ndvgo.rgb_voxel_grid.grid.data[:, :, :, 2] = blue_ramp\n\n\nplt.imshow(dvgo.rgb_voxel_grid.grid[4,:,:,:].detach().numpy());\n\n\nplt.imshow(dvgo.rgb_voxel_grid.grid[:,12,:,:].detach().numpy());\n\n\nplt.imshow(dvgo.rgb_voxel_grid.grid[:,:,15,:].detach().numpy());\n\n\n# Let's check interpolation:\nwith torch.no_grad():\n    P = torch.Tensor([[4, 12, 15], [4, 12, 15]])\n    print(dvgo.rgb_voxel_grid(P))\n\n\n# Fill the density with zeros, except for a cube in the middle:\ndvgo.density_voxel_grid.grid.data[:, :, :, :] = 0.0\n\nfor i in range(X // 4, 1 + 3 * X // 4):\n    for j in range(Y // 4, 1 + 3 * Y // 4):\n        for k in range(Z // 4, 1 + 3 * Z // 4):\n            dvgo.density_voxel_grid.grid.data[i, j, k, :] = 100.0\n\n\nplt.imshow(torch.sum(dvgo.alpha(), axis=2).detach().numpy()/Z); plt.colorbar();\n\n\n\n\n\ndef create_rays(config: Config, face, off=1.0):\n    \"\"\"\n    Create rays for an orthographic camera on one of the grid faces.\n    It generates rays centered at the center of every pixel on the face.\n    Takes as input a config and the face id \"x\", \"-x\", \"y\", \"-y\", \"z\", \"-z\".\n    \"\"\"\n    # Get grid shape:\n    n, m, p = config.shape\n    def get_x(i):\n        dx = (config.max_corner[0] - config.min_corner[0]) / n\n        return config.min_corner[0] + (i + 0.5) * dx\n    def get_y(j):\n        dy = (config.max_corner[1] - config.min_corner[1]) / m\n        return config.min_corner[1] + (j + 0.5) * dy\n    def get_z(k):\n        dz = (config.max_corner[2] - config.min_corner[2]) / p\n        return config.min_corner[2] + (k + 0.5) * dz\n    # Fill in the rays:\n    if face == \"x\":\n        rays = torch.zeros((m, p, 6))\n        for j in range(m):\n            for k in range(p):\n                rays[j, k, :] = torch.tensor(\n                    [config.min_corner[0]-off, get_y(j), get_z(k), 1.0, 0.0, 0.0]\n                )\n    elif face == \"-x\":\n        rays = torch.zeros((m, p, 6))\n        for j in range(m):\n            for k in range(p):\n                rays[j, k, :] = torch.tensor(\n                    [config.max_corner[0]+off, get_y(j), get_z(k), -1.0, 0.0, 0.0]\n                )\n    elif face == \"y\":\n        rays = torch.zeros((n, p, 6))\n        for i in range(n):\n            for k in range(p):\n                rays[i, k, :] = torch.tensor(\n                    [get_x(i), config.min_corner[1]-off, get_z(k), 0.0, 1.0, 0.0]\n                )\n    elif face == \"-y\":\n        rays = torch.zeros((n, p, 6))\n        for i in range(n):\n            for k in range(p):\n                rays[i, k, :] = torch.tensor(\n                    [get_x(i), config.max_corner[1]+off, get_z(k), 0.0, -1.0, 0.0]\n                )\n    elif face == \"z\":\n        rays = torch.zeros((n, m, 6))\n        for i in range(n):\n            for j in range(m):\n                rays[i, j, :] = torch.tensor(\n                    [get_x(i), get_y(j), config.min_corner[2]-off, 0.0, 0.0, 1.0]\n                )\n    elif face == \"-z\":\n        rays = torch.zeros((n, m, 6))\n        for i in range(n):\n            for j in range(m):\n                rays[i, j, :] = torch.tensor(\n                    [get_x(i), get_y(j), config.max_corner[2]+off, 0.0, 0.0, -1.0]\n                )\n    else:\n        raise ValueError(\"Invalid face id\")\n    return rays\n\n\n# Let's create rays for the \"x\" face:\nx_rays = create_rays(Config(), \"x\")\ntest_eq(x_rays.shape, torch.Size([16, 16, 6]))\nhalf = 2.0/32\ntest_close(x_rays[0,0], torch.tensor([-2, -1+half,  -1+half, 1, 0, 0]), 1e-3)\ntest_close(x_rays[-1,-1], torch.tensor([-2, 1-half,  1-half, 1, 0, 0]), 1e-3)\n\n\n# Sample from the x-face rays:\nx_ray_samples = sample_rays(dvgo.t_values, x_rays, training=False)\ntest_eq(x_ray_samples.shape, torch.Size([16, 16, 64, 3]))\n# Check that first sample is about 0.5 from the face:\ntest_close(x_ray_samples[0, 0, 0], np.array([-1.5, -0.9375, -0.9375]), 0.1)\n# And that the last sample is about 0.5 from the back face:\ntest_close(x_ray_samples[0, 0, -1], np.array([1.5, -0.9375, -0.9375]), 0.1)\n\n\n# Check scaled and bracketed coordinates:\nrescaled = dvgo.shape * (x_ray_samples - dvgo.min) / (dvgo.max - dvgo.min)\ntest_eq(rescaled.shape, torch.Size([16, 16, 64, 3]))\nmiddle = rescaled[8, 8]\ntest_eq(middle.shape, torch.Size([64, 3]))\nprint(middle[:, 0])\nbracket(middle[:, 0],16)\n\nNow, check the density and RGB values along this middle ray:\n\nx, y, z = middle[..., 0], middle[..., 1], middle[..., 2]\n\n# Get indices of the corners, clamping to the grid size where needed:\nX0, X1, a = bracket(x, dvgo.rgb_voxel_grid.grid.shape[0])\nY0, Y1, b = bracket(y, dvgo.rgb_voxel_grid.grid.shape[1])\nZ0, Z1, c = bracket(z, dvgo.rgb_voxel_grid.grid.shape[2])\n\n\n# Interpolate in the x direction:\ny0z0 = interpolate(dvgo.rgb_voxel_grid.grid[X0, Y0, Z0, :], dvgo.rgb_voxel_grid.grid[X1, Y0, Z0, :], a)\ny1z0 = interpolate(dvgo.rgb_voxel_grid.grid[X0, Y1, Z0, :], dvgo.rgb_voxel_grid.grid[X1, Y1, Z0, :], a)\ny0z1 = interpolate(dvgo.rgb_voxel_grid.grid[X0, Y0, Z1, :], dvgo.rgb_voxel_grid.grid[X1, Y0, Z1, :], a)\ny1z1 = interpolate(dvgo.rgb_voxel_grid.grid[X0, Y1, Z1, :], dvgo.rgb_voxel_grid.grid[X1, Y1, Z1, :], a)\n\n# Interpolate in the y direction:\nz0 = interpolate(y0z0, y1z0, b)\nz1 = interpolate(y0z1, y1z1, b)\n\n# Interpolate in the z direction:\npredicted_rgb = interpolate(z0, z1, c).squeeze(-1)\n\ntest_eq(predicted_rgb.shape, torch.Size([64, 3]))\ntest_close(predicted_rgb[0], torch.tensor([0.0, 0.5, 0.5]), 0.1)\ntest_close(predicted_rgb[32], torch.tensor([0.5, 0.5, 0.5]), 0.1)\ntest_close(predicted_rgb[-1], torch.tensor([1.0, 0.5, 0.5]), 0.1)\n\n\ndensity = torch.squeeze(dvgo.density_voxel_grid(middle))\ndensity = F.relu(density)\nrgb = torch.clamp(dvgo.rgb_voxel_grid(middle), 0, 1)\n\n\n# Check shapes and values:\ntest_eq(density.shape, torch.Size([64]))\ntest_eq(rgb.shape, torch.Size([64, 3]))\ntest_close(rgb[0], torch.tensor([0.0, 0.5, 0.5]), 0.1)\ntest_close(rgb[32], torch.tensor([0.5, 0.5, 0.5]), 0.1)\ntest_close(rgb[-1], torch.tensor([1.0, 0.5, 0.5]), 0.1)\n\n\n# plot density using plotly, lines and markers:\npx.line(x=dvgo.t_values, y=density.detach().numpy(), title=\"Density\", markers=\"lines+markers\")\n\n\n# plot alpha using plotly, lines and markers:\npx.line(x=dvgo.t_values, y=1-np.exp(-density.detach().numpy()), title=\"Alpha\", markers=\"lines+markers\")\n\n\n# Plot transmittance using plotly, lines and markers:\ntransmittance = torch.exp(-torch.cumsum(density, dim=-1))\npx.line(x=dvgo.t_values, y=transmittance.detach().numpy(), title=\"Transmittance\", markers=\"lines+markers\")\n\n\n# Plot rgb the same way, one trace at a time:\nfig = go.Figure()\ncolors =dict(zip([0,1,2], [\"red\", \"green\", \"blue\"]))\nfor i in range(3):\n    fig.add_trace(\n        go.Scatter(\n            x=dvgo.t_values,\n            y=rgb[:, i].detach().numpy(),\n            mode=\"lines+markers\",\n            name=f\"RGB\"[i],\n            marker=dict(size=5, color=colors[i]),\n        )\n    )\nfig.update_layout(title=\"RGB\")\n\n\n# Make sure to use actual calculation:\nwith torch.no_grad():\n    alpha = 1 - torch.exp(-density)\n    cumulative_density = torch.cumsum(density, dim=-1)\n    trans = torch.exp(-cumulative_density)\n    trans = torch.cat([torch.ones_like(density[..., :1]), trans[..., :-1]], dim=-1)\n\n    weights = alpha * trans\n    color_acc = torch.einsum('...i,...ij-&gt;...j', weights, rgb)\n    acc = weights.sum(dim=-1, keepdim=True)\n\n    color = color_acc + (1.0 - acc) * WHITE\n\nprint(acc, color_acc, color)\n\n\npx.line(x=dvgo.t_values, y=weights.detach().numpy(), title=\"Weights\", markers=\"lines+markers\")\n\nFinally, render:\n\nx_render = dvgo(x_rays, training=False).detach().numpy()\nplt.imshow(x_render);"
+  },
+  {
+    "objectID": "nerf.html#a-differentiable-voxel-grid",
+    "href": "nerf.html#a-differentiable-voxel-grid",
+    "title": "nerf",
+    "section": "",
+    "text": "def bracket(x, n):\n    \"\"\"Return the indices of the nearest grid points to x, as well as weights.\"\"\"\n    x0 = torch.floor(x).long()\n    X0 = torch.clamp(x0, min=0, max=(n - 1))\n    X1 = torch.clamp(x0 + 1, min=0, max=(n - 1))\n    return X0, X1, torch.clamp(x - x0.float(), min=0.0, max=1.0)\n\n\ndef interpolate(v0, v1, alpha):\n    \"\"\"Interpolate between v0 and v1 using alpha, using unsqueeze to properly handle batches.\"\"\"\n    return v0 * (1 - alpha.unsqueeze(-1)) + v1 * alpha.unsqueeze(-1)\n\nclass VoxelGrid(nn.Module):\n    def __init__(self, shape, d=1, max=1.0):\n        \"\"\"A 3D voxel grid with given `shape` with learnable values at the middle of the voxels.\"\"\"\n        super(VoxelGrid, self).__init__()\n        # Note that we store *corner* values, so we need one more point in each dimension:\n        storage_shape = tuple(s + 1 for s in shape)\n        self.grid = nn.Parameter(torch.rand(*storage_shape, d) * max)\n\n    def forward(self, P):\n        \"\"\"Implement trilinear interpolation at the points P.\"\"\"\n        x, y, z = P[..., 0], P[..., 1], P[..., 2]\n\n        # Get indices of the corners, clamping to the grid size where needed:\n        X0, X1, a = bracket(x, self.grid.shape[0])\n        Y0, Y1, b = bracket(y, self.grid.shape[1])\n        Z0, Z1, c = bracket(z, self.grid.shape[2])\n\n        # Interpolate in the x direction:\n        y0z0 = interpolate(self.grid[X0, Y0, Z0, :], self.grid[X1, Y0, Z0, :], a)\n        y1z0 = interpolate(self.grid[X0, Y1, Z0, :], self.grid[X1, Y1, Z0, :], a)\n        y0z1 = interpolate(self.grid[X0, Y0, Z1, :], self.grid[X1, Y0, Z1, :], a)\n        y1z1 = interpolate(self.grid[X0, Y1, Z1, :], self.grid[X1, Y1, Z1, :], a)\n\n        # Interpolate in the y direction:\n        z0 = interpolate(y0z0, y1z0, b)\n        z1 = interpolate(y0z1, y1z1, b)\n        \n        # Interpolate in the z direction:\n        return interpolate(z0, z1, c).squeeze(-1)\n\nThe code below initializes a VoxelGrid with random values, and then evaluates the a scalar function at a 3D point:\n\nvoxel_grid_module = VoxelGrid(shape=(6, 6, 6), d=1)\npoint = torch.Tensor([1.5, 2.7, 3.4])\noutput = voxel_grid_module(point)\nprint(f\"Interpolated Output: {output.item():.5f}\")\ntest_eq(output.shape, torch.Size([]))\n\nBelow we create a grid that interpolates a four-dimensional function (d=4), and evaluate it at a 2x2 batch x of 3D points:\n\nvoxel_grid_module = VoxelGrid(shape = (6, 6, 6), d=4)\n\nx = torch.Tensor([[[1.5, 2.7, 3.4], [2.3, 4.6, 1.1]], [[2.3, 4.6, 1.1], [2.3, 4.6, 1.1]]])\ny = voxel_grid_module(x)\ntest_eq(x.shape, torch.Size([2, 2, 3]))\ntest_eq(y.shape, torch.Size([2, 2, 4]))\nprint(\"Interpolated Output:\\n\", y.detach().numpy())"
+  },
+  {
+    "objectID": "nerf.html#dvgo",
+    "href": "nerf.html#dvgo",
+    "title": "nerf",
+    "section": "",
+    "text": "@dataclass\nclass Config:\n    near: float = 0.5\n    far: float = 3.5\n    num_samples: int = 64\n    min_corner: tuple[float] = (-1.0, -1.0, -1.0)\n    max_corner: tuple[float] = (1.0, 1.0, 1.0)\n    shape: tuple[int] = (16, 16, 16)\n    background = WHITE\n\n\ndef sample_rays(t_values, rays, training=True):\n    \"\"\"Sample points along the rays, using the t_values defined in the constructor.\n        During training, add a small random scalar to t_values to prevent overfitting to the\n        discrete sampling locations.\n    \"\"\"\n    # Extract ray origins and directions from rays\n    origins = rays[..., :3].to(dtype=torch.float32)\n    directions = rays[..., 3:].to(dtype=torch.float32)\n\n    # Add a small random scalar to t_values during training\n    if training:\n        with torch.no_grad():\n            n = t_values.size(0)\n            random_scalar = (torch.rand(n) - 0.5) / n\n            actual_ts = t_values.clone() + random_scalar\n    else:\n        actual_ts = t_values.clone()\n\n    # Sample along the ray\n    return sample_along_ray(actual_ts, origins, directions)\n\n\nclass SimpleDVGO(nn.Module):\n    def __init__(self, config: Config = Config()):\n        \"\"\"Initialize voxel grids and bounding box corners.\"\"\"\n        super().__init__()  # Calling the superclass's __init__ method\n\n        # Initialize sampler parameters:\n        self.depths = torch.linspace(\n            config.near, config.far, config.num_samples + 1, dtype=torch.float32\n        )\n        self.t_values = 0.5 * (self.depths[1:] + self.depths[:-1])\n\n        # Set up conversion from scene coordinates to grid coordinates:\n        self.min = torch.tensor(config.min_corner, dtype=torch.float32)\n        self.max = torch.tensor(config.max_corner, dtype=torch.float32)\n        self.shape = torch.tensor(config.shape, dtype=torch.float32)\n\n        # Initialize differentiable voxel grids:\n        self.rgb_voxel_grid = VoxelGrid(config.shape, d=3, max=1.0)\n        self.density_voxel_grid = VoxelGrid(config.shape, d=1, max=0.001)\n\n        # Finally, record background color for rendering:\n        self.background = config.background\n\n    def forward(self, rays, training=True):\n        \"\"\"Perform volume rendering using the provided ray information.\"\"\"\n        samples = sample_rays(self.t_values, rays, training=training)\n\n        # Rescale to fit within the grid\n        rescaled = self.shape * (samples - self.min) / (self.max - self.min)\n\n        # Query Density Voxel Grid\n        density = torch.squeeze(self.density_voxel_grid(rescaled))\n        density = F.relu(density)\n\n        # Query RGB Voxel Grid\n        rgb = torch.clamp(self.rgb_voxel_grid(rescaled), 0.0, 1.0)\n\n        # Render\n        return render_along_ray(density, rgb, self.background)\n    \n    def alpha(self):\n        \"\"\"return the alpha for the density voxel grid\"\"\"\n        density = F.relu(self.density_voxel_grid.grid)\n        return 1 - torch.exp(-density)\n\nBelow we calculate the colors for 32 random rays, each with their origin and direction stacked into a 6-vector, so the input batch size is \\(32 \\times 6\\), and we expect an output batch size of RGB colors, i.e., \\(32 \\times 3\\):\n\n# Initialize renderer\ndvgo = SimpleDVGO()\n\nrays = torch.rand((32, 6))\ncolors = dvgo(rays)\n# Verify shape of the output\ntest_eq(colors.shape, torch.Size([32, 3]))"
+  },
+  {
+    "objectID": "nerf.html#some-simple-test-setups",
+    "href": "nerf.html#some-simple-test-setups",
+    "title": "nerf",
+    "section": "",
+    "text": "# Fill the rgb grid with ramps of red, green, and blue values:\nX, Y, Z, _ = dvgo.rgb_voxel_grid.grid.shape\n\n# Create ramps for each channel\n# Each ramp is initially 1D, and we then unsqueeze to make it 4D with singleton dimensions where needed\nred_ramp = torch.linspace(0, 1, X).unsqueeze(-1).unsqueeze(-1)  # Size: [X, 1, 1]\ngreen_ramp = torch.linspace(0, 1, Y).unsqueeze(0).unsqueeze(-1)  # Size: [1, Y, 1]\nblue_ramp = torch.linspace(0, 1, Z).unsqueeze(0).unsqueeze(0)  # Size: [1, 1, Z]\n\n# When we assign these ramps to the grid, broadcasting will automatically expand them to the full size\ndvgo.rgb_voxel_grid.grid.data[:, :, :, 0] = red_ramp\ndvgo.rgb_voxel_grid.grid.data[:, :, :, 1] = green_ramp\ndvgo.rgb_voxel_grid.grid.data[:, :, :, 2] = blue_ramp\n\n\nplt.imshow(dvgo.rgb_voxel_grid.grid[4,:,:,:].detach().numpy());\n\n\nplt.imshow(dvgo.rgb_voxel_grid.grid[:,12,:,:].detach().numpy());\n\n\nplt.imshow(dvgo.rgb_voxel_grid.grid[:,:,15,:].detach().numpy());\n\n\n# Let's check interpolation:\nwith torch.no_grad():\n    P = torch.Tensor([[4, 12, 15], [4, 12, 15]])\n    print(dvgo.rgb_voxel_grid(P))\n\n\n# Fill the density with zeros, except for a cube in the middle:\ndvgo.density_voxel_grid.grid.data[:, :, :, :] = 0.0\n\nfor i in range(X // 4, 1 + 3 * X // 4):\n    for j in range(Y // 4, 1 + 3 * Y // 4):\n        for k in range(Z // 4, 1 + 3 * Z // 4):\n            dvgo.density_voxel_grid.grid.data[i, j, k, :] = 100.0\n\n\nplt.imshow(torch.sum(dvgo.alpha(), axis=2).detach().numpy()/Z); plt.colorbar();"
+  },
+  {
+    "objectID": "nerf.html#some-orthographic-renders",
+    "href": "nerf.html#some-orthographic-renders",
+    "title": "nerf",
+    "section": "",
+    "text": "def create_rays(config: Config, face, off=1.0):\n    \"\"\"\n    Create rays for an orthographic camera on one of the grid faces.\n    It generates rays centered at the center of every pixel on the face.\n    Takes as input a config and the face id \"x\", \"-x\", \"y\", \"-y\", \"z\", \"-z\".\n    \"\"\"\n    # Get grid shape:\n    n, m, p = config.shape\n    def get_x(i):\n        dx = (config.max_corner[0] - config.min_corner[0]) / n\n        return config.min_corner[0] + (i + 0.5) * dx\n    def get_y(j):\n        dy = (config.max_corner[1] - config.min_corner[1]) / m\n        return config.min_corner[1] + (j + 0.5) * dy\n    def get_z(k):\n        dz = (config.max_corner[2] - config.min_corner[2]) / p\n        return config.min_corner[2] + (k + 0.5) * dz\n    # Fill in the rays:\n    if face == \"x\":\n        rays = torch.zeros((m, p, 6))\n        for j in range(m):\n            for k in range(p):\n                rays[j, k, :] = torch.tensor(\n                    [config.min_corner[0]-off, get_y(j), get_z(k), 1.0, 0.0, 0.0]\n                )\n    elif face == \"-x\":\n        rays = torch.zeros((m, p, 6))\n        for j in range(m):\n            for k in range(p):\n                rays[j, k, :] = torch.tensor(\n                    [config.max_corner[0]+off, get_y(j), get_z(k), -1.0, 0.0, 0.0]\n                )\n    elif face == \"y\":\n        rays = torch.zeros((n, p, 6))\n        for i in range(n):\n            for k in range(p):\n                rays[i, k, :] = torch.tensor(\n                    [get_x(i), config.min_corner[1]-off, get_z(k), 0.0, 1.0, 0.0]\n                )\n    elif face == \"-y\":\n        rays = torch.zeros((n, p, 6))\n        for i in range(n):\n            for k in range(p):\n                rays[i, k, :] = torch.tensor(\n                    [get_x(i), config.max_corner[1]+off, get_z(k), 0.0, -1.0, 0.0]\n                )\n    elif face == \"z\":\n        rays = torch.zeros((n, m, 6))\n        for i in range(n):\n            for j in range(m):\n                rays[i, j, :] = torch.tensor(\n                    [get_x(i), get_y(j), config.min_corner[2]-off, 0.0, 0.0, 1.0]\n                )\n    elif face == \"-z\":\n        rays = torch.zeros((n, m, 6))\n        for i in range(n):\n            for j in range(m):\n                rays[i, j, :] = torch.tensor(\n                    [get_x(i), get_y(j), config.max_corner[2]+off, 0.0, 0.0, -1.0]\n                )\n    else:\n        raise ValueError(\"Invalid face id\")\n    return rays\n\n\n# Let's create rays for the \"x\" face:\nx_rays = create_rays(Config(), \"x\")\ntest_eq(x_rays.shape, torch.Size([16, 16, 6]))\nhalf = 2.0/32\ntest_close(x_rays[0,0], torch.tensor([-2, -1+half,  -1+half, 1, 0, 0]), 1e-3)\ntest_close(x_rays[-1,-1], torch.tensor([-2, 1-half,  1-half, 1, 0, 0]), 1e-3)\n\n\n# Sample from the x-face rays:\nx_ray_samples = sample_rays(dvgo.t_values, x_rays, training=False)\ntest_eq(x_ray_samples.shape, torch.Size([16, 16, 64, 3]))\n# Check that first sample is about 0.5 from the face:\ntest_close(x_ray_samples[0, 0, 0], np.array([-1.5, -0.9375, -0.9375]), 0.1)\n# And that the last sample is about 0.5 from the back face:\ntest_close(x_ray_samples[0, 0, -1], np.array([1.5, -0.9375, -0.9375]), 0.1)\n\n\n# Check scaled and bracketed coordinates:\nrescaled = dvgo.shape * (x_ray_samples - dvgo.min) / (dvgo.max - dvgo.min)\ntest_eq(rescaled.shape, torch.Size([16, 16, 64, 3]))\nmiddle = rescaled[8, 8]\ntest_eq(middle.shape, torch.Size([64, 3]))\nprint(middle[:, 0])\nbracket(middle[:, 0],16)\n\nNow, check the density and RGB values along this middle ray:\n\nx, y, z = middle[..., 0], middle[..., 1], middle[..., 2]\n\n# Get indices of the corners, clamping to the grid size where needed:\nX0, X1, a = bracket(x, dvgo.rgb_voxel_grid.grid.shape[0])\nY0, Y1, b = bracket(y, dvgo.rgb_voxel_grid.grid.shape[1])\nZ0, Z1, c = bracket(z, dvgo.rgb_voxel_grid.grid.shape[2])\n\n\n# Interpolate in the x direction:\ny0z0 = interpolate(dvgo.rgb_voxel_grid.grid[X0, Y0, Z0, :], dvgo.rgb_voxel_grid.grid[X1, Y0, Z0, :], a)\ny1z0 = interpolate(dvgo.rgb_voxel_grid.grid[X0, Y1, Z0, :], dvgo.rgb_voxel_grid.grid[X1, Y1, Z0, :], a)\ny0z1 = interpolate(dvgo.rgb_voxel_grid.grid[X0, Y0, Z1, :], dvgo.rgb_voxel_grid.grid[X1, Y0, Z1, :], a)\ny1z1 = interpolate(dvgo.rgb_voxel_grid.grid[X0, Y1, Z1, :], dvgo.rgb_voxel_grid.grid[X1, Y1, Z1, :], a)\n\n# Interpolate in the y direction:\nz0 = interpolate(y0z0, y1z0, b)\nz1 = interpolate(y0z1, y1z1, b)\n\n# Interpolate in the z direction:\npredicted_rgb = interpolate(z0, z1, c).squeeze(-1)\n\ntest_eq(predicted_rgb.shape, torch.Size([64, 3]))\ntest_close(predicted_rgb[0], torch.tensor([0.0, 0.5, 0.5]), 0.1)\ntest_close(predicted_rgb[32], torch.tensor([0.5, 0.5, 0.5]), 0.1)\ntest_close(predicted_rgb[-1], torch.tensor([1.0, 0.5, 0.5]), 0.1)\n\n\ndensity = torch.squeeze(dvgo.density_voxel_grid(middle))\ndensity = F.relu(density)\nrgb = torch.clamp(dvgo.rgb_voxel_grid(middle), 0, 1)\n\n\n# Check shapes and values:\ntest_eq(density.shape, torch.Size([64]))\ntest_eq(rgb.shape, torch.Size([64, 3]))\ntest_close(rgb[0], torch.tensor([0.0, 0.5, 0.5]), 0.1)\ntest_close(rgb[32], torch.tensor([0.5, 0.5, 0.5]), 0.1)\ntest_close(rgb[-1], torch.tensor([1.0, 0.5, 0.5]), 0.1)\n\n\n# plot density using plotly, lines and markers:\npx.line(x=dvgo.t_values, y=density.detach().numpy(), title=\"Density\", markers=\"lines+markers\")\n\n\n# plot alpha using plotly, lines and markers:\npx.line(x=dvgo.t_values, y=1-np.exp(-density.detach().numpy()), title=\"Alpha\", markers=\"lines+markers\")\n\n\n# Plot transmittance using plotly, lines and markers:\ntransmittance = torch.exp(-torch.cumsum(density, dim=-1))\npx.line(x=dvgo.t_values, y=transmittance.detach().numpy(), title=\"Transmittance\", markers=\"lines+markers\")\n\n\n# Plot rgb the same way, one trace at a time:\nfig = go.Figure()\ncolors =dict(zip([0,1,2], [\"red\", \"green\", \"blue\"]))\nfor i in range(3):\n    fig.add_trace(\n        go.Scatter(\n            x=dvgo.t_values,\n            y=rgb[:, i].detach().numpy(),\n            mode=\"lines+markers\",\n            name=f\"RGB\"[i],\n            marker=dict(size=5, color=colors[i]),\n        )\n    )\nfig.update_layout(title=\"RGB\")\n\n\n# Make sure to use actual calculation:\nwith torch.no_grad():\n    alpha = 1 - torch.exp(-density)\n    cumulative_density = torch.cumsum(density, dim=-1)\n    trans = torch.exp(-cumulative_density)\n    trans = torch.cat([torch.ones_like(density[..., :1]), trans[..., :-1]], dim=-1)\n\n    weights = alpha * trans\n    color_acc = torch.einsum('...i,...ij-&gt;...j', weights, rgb)\n    acc = weights.sum(dim=-1, keepdim=True)\n\n    color = color_acc + (1.0 - acc) * WHITE\n\nprint(acc, color_acc, color)\n\n\npx.line(x=dvgo.t_values, y=weights.detach().numpy(), title=\"Weights\", markers=\"lines+markers\")\n\nFinally, render:\n\nx_render = dvgo(x_rays, training=False).detach().numpy()\nplt.imshow(x_render);"
+  },
+  {
+    "objectID": "stonehenge.html",
+    "href": "stonehenge.html",
+    "title": "stonehenge",
+    "section": "",
+    "text": "We use a dataset from the Stanford NeRF Navigation project. It consists of 500 images, split into 200 images for training, and then validation and tests sets of 150 images each.\n\n\nThe code below reads an image into memory:\n\nsource\n\n\n\n read_stonehenge_image (path:str, downsampling_factor:int=1)\n\n*Read image from the Stonehenge dataset, and return as a PIL image.\nReturns: PIL.Image: Image object representing the image at the specified index.*\n\nsource\n\n\n\n\n read_training_image (index:int, downsampling_factor:int=1)\n\nRead image from the stonehenge dataset, and return as a PIL image.\n\nimage = read_training_image(60, downsampling_factor=2)\nplt.imshow(image);\n\n\n\n\n\n\n\n\n\n\n\n\nA NeRF is trained with a set of rays. For a given image, every pixel in the image corresponds to a ray, and the origin of the ray is exactly the optical center of the camera. To calculate the direction of the ray need two pieces of information for ech image:\n\nthe intrinsic calibration of the camera, most importantly the focal length, tells us how to convert pixel coordinates into a direction in the camera coordinate frame.\nthe extrinsic calibration, position and orientation with which the image was taken, is needed to transform directions in the camera frame into the scene coordinate frame.\n\nFor the Stonehenge dataset, all this hard work has been done for us, and/or the images have been simulated with exactly known camera parameters, both intrinsic and extrinsic. The dataset creators provide undistorted images accompanied by a \\(3 \\times 4\\) camera matrix \\(M\\).\nThe Stonehenge dataset came with its camera matrices: they were all written in a json file, which we can parse into a python dictionary:\n\nsource\n\n\n\n load_json (path)\n\n*Load and parse a JSON file from a relative path.\nReturns: dict: Parsed JSON data as a Python dictionary.*\n\n# Open the transforms JSON file and read its content\ndata = load_json(\"transforms_train.json\")\ntest_eq(len(data), 4)\ntest_eq(list(data.keys()), ['Far', 'Near', 'camera_angle_x', 'frames'])\n\nThe camera matrix associated with the image below can then be extracted by converting to numpy:\n\nsource\n\n\n\n\n extract_camera_matrix (camera_data, index:int, image_size:tuple)\n\nRead the 3x4 camera matrix associated with a training image.\n\nsource\n\n\n\n\n extract_extrinsics (camera_data:dict, index:int)\n\nExtract the extrinsic matrix from the given camera_data.\n\nsource\n\n\n\n\n calculate_intrinsics (image_size:tuple, camera_angle_x:float)\n\nCalculate the intrinsic matrix given the image size and camera angle.\n\n# Testing:\nM = extract_camera_matrix(data, 47, (800,800))\ntest_eq(M.shape, (3, 4))\nexpected = np.array(\n    [\n        [1152, 17, 255, -1000],\n        [-113, 385, 1111, -1000],\n        [0, -1, 1, -2],\n    ]\n)\ntest_close(M, expected, eps=1.0)\n\n\n\n\n\nWe can use a camera matrix to project arbitrary points into the scene. We will use this to project a circle to ascertain the dimensions in which the Stonehenge scene fits.\n\n# Make a function to load the camera matrix and project a circle into the image:\ndef project_circle(camera_data, index, image_size, circle):\n    \"\"\"Project the circle into the image.\"\"\"\n    M = extract_camera_matrix(camera_data, index, image_size)\n    homogeneous = M @ circle\n    return homogeneous[:2] / homogeneous[-1]\n\n\n# Create a circle of given radius on the ground plane:\nR = 1.5\ntheta = np.linspace(0, 2*np.pi, 100)\nx = R * np.cos(theta)\ny = R * np.sin(theta)\nz = np.zeros_like(x)\ncircle = np.vstack((x, y, z, np.ones_like(x)))\n\n# Check its shape, should be 4D homogenous coordinates:\ntest_eq(circle.shape, (4, 100))\n\n\n# Apply it to image 47 check the shape:\ncircle_47 = project_circle(data, 47, (800, 800), circle)\ntest_eq(circle_47.shape, (2, 100))\n\n\n# Show two images side by side and plot the circles on the image:\nfig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))\ni1, i2 = 70, 140\nax1.imshow(read_training_image(i1, downsampling_factor=2))\nax1.plot(*project_circle(data, i1, (400, 400), circle), color=\"red\")\nax2.imshow(read_training_image(i2, downsampling_factor=2))\nax2.plot(*project_circle(data, i2, (400, 400), circle), color=\"red\");\n\n\n\n\n\n\n\n\n\n\n\nRecall that a 3D point \\(P\\) can be projected into an image via\n\\[\n\\tilde{p} = K R^T (P - t)\n\\]\nwhere \\(\\tilde{p}\\) are homogeneous 2D image coordinates. We can re-write this as\n\\[\n\\tilde{p} = M\\tilde{P}\n\\]\nwhere \\(\\tilde{P} = \\begin{bmatrix}P \\\\1 \\end{bmatrix}\\) and the camera matrix \\(M\\) is given by\n\\[\nM = [A|a] = [K R^T | - K R^T t]\n\\]\nThat means that if we are given the camera matrix \\(M\\) we can always recover the ray origins as \\[\nt = -A^{-1} a\n\\]\nand a random 3D point \\(P\\) on the ray corresponding to \\(\\tilde{p}\\) as\n\\[\nP = A^{-1}(\\tilde{p} - a)\n\\]\nsince \\(\\tilde{p} = AP + a\\).\nWe can then calculate the ray origin and ray direction for any pixel:\n\nA, a = M[:, :3], M[:, 3]\nt = -np.linalg.inv(A) @ a\np_ = np.array([3.5, 2.5, 1]) # middle of a 7x5 image (width x height) in homogeneous coordinates.\nP = np.linalg.inv(A) @ (p_ - a)\nD = P / np.linalg.norm(P)\ntest_close(t, np.array([0.54, -1.85, 1.60]), eps=0.1)\ntest_close(D, np.array([0.14, -0.82, 0.55]), eps=0.1)\n\n\nsource\n\n\n\n calculate_rays (M:numpy.ndarray, image_size:tuple)\n\nCalculate a batch of rays associated with every pixel in a given image. When given size (W, H), returns two tensors of shape (H, W, 3) and (H, W, 3).\nLet’s try this for a simple 7x5 image (where 7 is width and 5 is height), and check that the batch dimensions are as we expect (width, height, 3), and that for the center pixel they agree with our manual calculation:\n\norigins, directions = calculate_rays(M, (7, 5))\n\n# Check dimensions:\ntest_eq(origins.shape, (5, 7, 3))\ntest_eq(directions.shape, (5, 7, 3))\n\n# Check values for middle pixel, on optical axis:\ntest_close(origins[2, 3, :], t)\ntest_close(directions[2, 3, :], -D)\n\nCheck that we get the same direction in top-left corner for different resolutions:\n\nsize = 400, 400\nM = extract_camera_matrix(data, 10, size)\n_, D400 = calculate_rays(M, size)\nprint(D400[0,0,:])\n\nsize = 800, 800\nM = extract_camera_matrix(data, 10, size)\n_, D800 = calculate_rays(M, size)\nprint(D800[0,0,:])\n\ntest_close(D400[0,0,:], D800[0,0,:], eps=1e-3)\n\nsize = 200, 200\nM = extract_camera_matrix(data, 10, size)\n_, D200 = calculate_rays(M, size)\nprint(D200[0,0,:])\n\ntest_close(D400[0,0,:], D200[0,0,:], eps=1e-3)\n\n[-0.57143088  0.80036988 -0.18131408]\n[-0.57134447  0.80046027 -0.18118731]\n[-0.57160367  0.800189   -0.18156763]\n\n\nBelow we cycle through 20 of the 200 training images, showing 64 rows for each.\n\nfig = go.Figure()\nfor i in range(0, 199, 10):\n    M = extract_camera_matrix(data, i, (image.size))\n    origins, directions = calculate_rays(M, (image.size))\n    T = origins[::100,::100,:].reshape(-1, 3)\n    D = directions[::100,::100,:].reshape(-1, 3)\n\n    # Adding line segments for each ray\n    for start, end in zip(T, T + D):\n        fig.add_trace(go.Scatter3d(x=[start[0], end[0]],\n                                y=[start[1], end[1]],\n                                z=[start[2], end[2]],\n                                mode='lines',\n                                line=dict(color='red')))\n\nfig.update_layout(showlegend=False)\nfig.show()\n\nUnable to display output for mime type(s): application/vnd.plotly.v1+json\n\n\nAnd here we show samples for one ray from each of those 20 cameras, with the rendering volume shown as well:\n\nt_values = np.linspace(data[\"Near\"], data[\"Far\"], 64)\n\ndef sample_along_ray(origins, directions):\n    return origins[..., None, :] + t_values[:, None] * directions[..., None, :]\n\nfig = go.Figure()\nW, H = image.size\nfor i in range(0, 199):\n    M = extract_camera_matrix(data, i, image.size)\n    origins, directions = calculate_rays(M, image.size)\n    i = np.random.randint(0, W)\n    j = np.random.randint(0, H)\n    T = origins[i, j, :]\n    D = directions[i, j, :]\n    samples = sample_along_ray(T, D)\n\n    # Adding line segments for each ray\n    fig.add_trace(\n        go.Scatter3d(\n            x=samples[:, 0],\n            y=samples[:, 1],\n            z=samples[:, 2],\n            mode=\"lines\",\n            line=dict(color=\"red\"),\n        )\n    )\n    fig.add_trace(\n        go.Scatter3d(\n            x=[T[0].item()],\n            y=[T[1].item()],\n            z=[T[2].item()],\n            mode=\"markers\",\n            marker=dict(color=\"red\", size=2),\n        )\n    )\n\n# add a cuboid from -1 to 1 in x and y, and 0 to 0.5 in z:\nfig.add_trace(\n    go.Mesh3d(\n        x=[-1, 1, 1, -1, -1, 1, 1, -1],\n        y=[-1, -1, 1, 1, -1, -1, 1, 1],\n        z=[-0.5, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5],\n        i=[0, 0, 4, 4],\n        j=[1, 2, 5, 6],\n        k=[2, 3, 6, 7],\n        opacity=0.5,\n        color=\"lightblue\",\n    )\n)\n\nfig.update_layout(showlegend=False, margin=dict(l=0, r=0, b=0, t=0))\nfig.show()\n\nUnable to display output for mime type(s): application/vnd.plotly.v1+json\n\n\n\n\n\n\nThe code below encodes all training images into rays:\n\nsource\n\n\n\n create_rays (camera_data, M=199, downsampling_factor=1)\n\nCreate rays for the training images. Args: camera_data: Dictionary containing the camera data. M: Number of training images to use. downsampling_factor: Downsampling factor to apply to the images. Returns: x_samples: Tensor of shape (M, H, W, 6) containing the origins and directions of the rays. y_samples: Tensor of shape (M, H, W, 3) containing the color data for each pixel.\n\nx_samples, y_samples = create_rays(data, 2, downsampling_factor=4)\n# Check shapes:\ntest_eq(x_samples.shape, (2, 200, 200, 6))\ntest_eq(y_samples.shape, (2, 200, 200, 3))\n# Check type:\ntest_eq(x_samples.dtype, np.float32)\ntest_eq(y_samples.dtype, np.float32)\n\n\n# Uncomment the following line to save the file:\n# np.savez_compressed('training_rays.npz', x=x_samples, y=y_samples)\n\n# x_samples, y_samples = create_rays(data, 100, downsampling_factor=4)\n# np.savez_compressed('training_rays-100-4.npz', x=x_samples, y=y_samples)\n\n\nsource\n\n\n\n\n load_npz_from_url (url)\n\n*Loads a .npz file from the given URL and returns the contained arrays as a tuple.\nParameters: url (str): URL of the .npz file.\nReturns: tuple: A tuple containing the loaded numpy arrays, or None if the request fails.*\n\n# Example usage to download the full Zenodo version, takes 5m!\n# url = 'https://zenodo.org/records/10443662/files/training_rays.npz'\n# loaded_arrays = load_npz_from_url(url)\n# if loaded_arrays is not None:\n#     xs, ys = loaded_arrays\n\n# # check that they have the right shape:\n# test_eq(xs.shape, (199, 800, 800, 6))\n# test_eq(ys.shape, (199, 800, 800, 3))\n\n# # check that they are float32:\n# test_eq(xs.dtype, np.float32)\n# test_eq(ys.dtype, np.float32)\n\n\n# Make sure 199 images with down-sampling factor 4 are available, takes 18 seconds.\n# url = 'https://zenodo.org/records/10765346/files/training_rays-199-4.npz'\n# loaded_arrays = load_npz_from_url(url)\n# if loaded_arrays is not None:\n#     xs, ys = loaded_arrays\n\n# # check that they have the right shape:\n# test_eq(xs.shape, (199, 200, 200, 6))\n# test_eq(ys.shape, (199, 200, 200, 3))\n\n# # check that they are float32:\n# test_eq(xs.dtype, np.float32)\n# test_eq(ys.dtype, np.float32)\n\n\nsource\n\n\n\n\n download_rays (M=100, downsampling_factor=4)\n\n\n# Example usage to download the downs-sampled github version, 10-12 seconds\nxs, ys = download_rays()\n\n# check that they have the right shape:\ntest_eq(xs.shape, (100, 200, 200, 6))\ntest_eq(ys.shape, (100, 200, 200, 3))\n\n# check that they are float32:\ntest_eq(xs.dtype, np.float32)\ntest_eq(ys.dtype, np.float32)",
+    "crumbs": [
+      "stonehenge"
+    ]
+  },
+  {
+    "objectID": "stonehenge.html#loading-images",
+    "href": "stonehenge.html#loading-images",
+    "title": "stonehenge",
+    "section": "",
+    "text": "The code below reads an image into memory:\n\nsource\n\n\n\n read_stonehenge_image (path:str, downsampling_factor:int=1)\n\n*Read image from the Stonehenge dataset, and return as a PIL image.\nReturns: PIL.Image: Image object representing the image at the specified index.*\n\nsource\n\n\n\n\n read_training_image (index:int, downsampling_factor:int=1)\n\nRead image from the stonehenge dataset, and return as a PIL image.\n\nimage = read_training_image(60, downsampling_factor=2)\nplt.imshow(image);",
+    "crumbs": [
+      "stonehenge"
+    ]
+  },
+  {
+    "objectID": "stonehenge.html#camera-matrices",
+    "href": "stonehenge.html#camera-matrices",
+    "title": "stonehenge",
+    "section": "",
+    "text": "A NeRF is trained with a set of rays. For a given image, every pixel in the image corresponds to a ray, and the origin of the ray is exactly the optical center of the camera. To calculate the direction of the ray need two pieces of information for ech image:\n\nthe intrinsic calibration of the camera, most importantly the focal length, tells us how to convert pixel coordinates into a direction in the camera coordinate frame.\nthe extrinsic calibration, position and orientation with which the image was taken, is needed to transform directions in the camera frame into the scene coordinate frame.\n\nFor the Stonehenge dataset, all this hard work has been done for us, and/or the images have been simulated with exactly known camera parameters, both intrinsic and extrinsic. The dataset creators provide undistorted images accompanied by a \\(3 \\times 4\\) camera matrix \\(M\\).\nThe Stonehenge dataset came with its camera matrices: they were all written in a json file, which we can parse into a python dictionary:\n\nsource\n\n\n\n load_json (path)\n\n*Load and parse a JSON file from a relative path.\nReturns: dict: Parsed JSON data as a Python dictionary.*\n\n# Open the transforms JSON file and read its content\ndata = load_json(\"transforms_train.json\")\ntest_eq(len(data), 4)\ntest_eq(list(data.keys()), ['Far', 'Near', 'camera_angle_x', 'frames'])\n\nThe camera matrix associated with the image below can then be extracted by converting to numpy:\n\nsource\n\n\n\n\n extract_camera_matrix (camera_data, index:int, image_size:tuple)\n\nRead the 3x4 camera matrix associated with a training image.\n\nsource\n\n\n\n\n extract_extrinsics (camera_data:dict, index:int)\n\nExtract the extrinsic matrix from the given camera_data.\n\nsource\n\n\n\n\n calculate_intrinsics (image_size:tuple, camera_angle_x:float)\n\nCalculate the intrinsic matrix given the image size and camera angle.\n\n# Testing:\nM = extract_camera_matrix(data, 47, (800,800))\ntest_eq(M.shape, (3, 4))\nexpected = np.array(\n    [\n        [1152, 17, 255, -1000],\n        [-113, 385, 1111, -1000],\n        [0, -1, 1, -2],\n    ]\n)\ntest_close(M, expected, eps=1.0)",
+    "crumbs": [
+      "stonehenge"
+    ]
+  },
+  {
+    "objectID": "stonehenge.html#checking-stonehenge-dimensions",
+    "href": "stonehenge.html#checking-stonehenge-dimensions",
+    "title": "stonehenge",
+    "section": "",
+    "text": "We can use a camera matrix to project arbitrary points into the scene. We will use this to project a circle to ascertain the dimensions in which the Stonehenge scene fits.\n\n# Make a function to load the camera matrix and project a circle into the image:\ndef project_circle(camera_data, index, image_size, circle):\n    \"\"\"Project the circle into the image.\"\"\"\n    M = extract_camera_matrix(camera_data, index, image_size)\n    homogeneous = M @ circle\n    return homogeneous[:2] / homogeneous[-1]\n\n\n# Create a circle of given radius on the ground plane:\nR = 1.5\ntheta = np.linspace(0, 2*np.pi, 100)\nx = R * np.cos(theta)\ny = R * np.sin(theta)\nz = np.zeros_like(x)\ncircle = np.vstack((x, y, z, np.ones_like(x)))\n\n# Check its shape, should be 4D homogenous coordinates:\ntest_eq(circle.shape, (4, 100))\n\n\n# Apply it to image 47 check the shape:\ncircle_47 = project_circle(data, 47, (800, 800), circle)\ntest_eq(circle_47.shape, (2, 100))\n\n\n# Show two images side by side and plot the circles on the image:\nfig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))\ni1, i2 = 70, 140\nax1.imshow(read_training_image(i1, downsampling_factor=2))\nax1.plot(*project_circle(data, i1, (400, 400), circle), color=\"red\")\nax2.imshow(read_training_image(i2, downsampling_factor=2))\nax2.plot(*project_circle(data, i2, (400, 400), circle), color=\"red\");",
+    "crumbs": [
+      "stonehenge"
+    ]
+  },
+  {
+    "objectID": "stonehenge.html#calculating-rays",
+    "href": "stonehenge.html#calculating-rays",
+    "title": "stonehenge",
+    "section": "",
+    "text": "Recall that a 3D point \\(P\\) can be projected into an image via\n\\[\n\\tilde{p} = K R^T (P - t)\n\\]\nwhere \\(\\tilde{p}\\) are homogeneous 2D image coordinates. We can re-write this as\n\\[\n\\tilde{p} = M\\tilde{P}\n\\]\nwhere \\(\\tilde{P} = \\begin{bmatrix}P \\\\1 \\end{bmatrix}\\) and the camera matrix \\(M\\) is given by\n\\[\nM = [A|a] = [K R^T | - K R^T t]\n\\]\nThat means that if we are given the camera matrix \\(M\\) we can always recover the ray origins as \\[\nt = -A^{-1} a\n\\]\nand a random 3D point \\(P\\) on the ray corresponding to \\(\\tilde{p}\\) as\n\\[\nP = A^{-1}(\\tilde{p} - a)\n\\]\nsince \\(\\tilde{p} = AP + a\\).\nWe can then calculate the ray origin and ray direction for any pixel:\n\nA, a = M[:, :3], M[:, 3]\nt = -np.linalg.inv(A) @ a\np_ = np.array([3.5, 2.5, 1]) # middle of a 7x5 image (width x height) in homogeneous coordinates.\nP = np.linalg.inv(A) @ (p_ - a)\nD = P / np.linalg.norm(P)\ntest_close(t, np.array([0.54, -1.85, 1.60]), eps=0.1)\ntest_close(D, np.array([0.14, -0.82, 0.55]), eps=0.1)\n\n\nsource\n\n\n\n calculate_rays (M:numpy.ndarray, image_size:tuple)\n\nCalculate a batch of rays associated with every pixel in a given image. When given size (W, H), returns two tensors of shape (H, W, 3) and (H, W, 3).\nLet’s try this for a simple 7x5 image (where 7 is width and 5 is height), and check that the batch dimensions are as we expect (width, height, 3), and that for the center pixel they agree with our manual calculation:\n\norigins, directions = calculate_rays(M, (7, 5))\n\n# Check dimensions:\ntest_eq(origins.shape, (5, 7, 3))\ntest_eq(directions.shape, (5, 7, 3))\n\n# Check values for middle pixel, on optical axis:\ntest_close(origins[2, 3, :], t)\ntest_close(directions[2, 3, :], -D)\n\nCheck that we get the same direction in top-left corner for different resolutions:\n\nsize = 400, 400\nM = extract_camera_matrix(data, 10, size)\n_, D400 = calculate_rays(M, size)\nprint(D400[0,0,:])\n\nsize = 800, 800\nM = extract_camera_matrix(data, 10, size)\n_, D800 = calculate_rays(M, size)\nprint(D800[0,0,:])\n\ntest_close(D400[0,0,:], D800[0,0,:], eps=1e-3)\n\nsize = 200, 200\nM = extract_camera_matrix(data, 10, size)\n_, D200 = calculate_rays(M, size)\nprint(D200[0,0,:])\n\ntest_close(D400[0,0,:], D200[0,0,:], eps=1e-3)\n\n[-0.57143088  0.80036988 -0.18131408]\n[-0.57134447  0.80046027 -0.18118731]\n[-0.57160367  0.800189   -0.18156763]\n\n\nBelow we cycle through 20 of the 200 training images, showing 64 rows for each.\n\nfig = go.Figure()\nfor i in range(0, 199, 10):\n    M = extract_camera_matrix(data, i, (image.size))\n    origins, directions = calculate_rays(M, (image.size))\n    T = origins[::100,::100,:].reshape(-1, 3)\n    D = directions[::100,::100,:].reshape(-1, 3)\n\n    # Adding line segments for each ray\n    for start, end in zip(T, T + D):\n        fig.add_trace(go.Scatter3d(x=[start[0], end[0]],\n                                y=[start[1], end[1]],\n                                z=[start[2], end[2]],\n                                mode='lines',\n                                line=dict(color='red')))\n\nfig.update_layout(showlegend=False)\nfig.show()\n\nUnable to display output for mime type(s): application/vnd.plotly.v1+json\n\n\nAnd here we show samples for one ray from each of those 20 cameras, with the rendering volume shown as well:\n\nt_values = np.linspace(data[\"Near\"], data[\"Far\"], 64)\n\ndef sample_along_ray(origins, directions):\n    return origins[..., None, :] + t_values[:, None] * directions[..., None, :]\n\nfig = go.Figure()\nW, H = image.size\nfor i in range(0, 199):\n    M = extract_camera_matrix(data, i, image.size)\n    origins, directions = calculate_rays(M, image.size)\n    i = np.random.randint(0, W)\n    j = np.random.randint(0, H)\n    T = origins[i, j, :]\n    D = directions[i, j, :]\n    samples = sample_along_ray(T, D)\n\n    # Adding line segments for each ray\n    fig.add_trace(\n        go.Scatter3d(\n            x=samples[:, 0],\n            y=samples[:, 1],\n            z=samples[:, 2],\n            mode=\"lines\",\n            line=dict(color=\"red\"),\n        )\n    )\n    fig.add_trace(\n        go.Scatter3d(\n            x=[T[0].item()],\n            y=[T[1].item()],\n            z=[T[2].item()],\n            mode=\"markers\",\n            marker=dict(color=\"red\", size=2),\n        )\n    )\n\n# add a cuboid from -1 to 1 in x and y, and 0 to 0.5 in z:\nfig.add_trace(\n    go.Mesh3d(\n        x=[-1, 1, 1, -1, -1, 1, 1, -1],\n        y=[-1, -1, 1, 1, -1, -1, 1, 1],\n        z=[-0.5, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5],\n        i=[0, 0, 4, 4],\n        j=[1, 2, 5, 6],\n        k=[2, 3, 6, 7],\n        opacity=0.5,\n        color=\"lightblue\",\n    )\n)\n\nfig.update_layout(showlegend=False, margin=dict(l=0, r=0, b=0, t=0))\nfig.show()\n\nUnable to display output for mime type(s): application/vnd.plotly.v1+json",
+    "crumbs": [
+      "stonehenge"
+    ]
+  },
+  {
+    "objectID": "stonehenge.html#ray-centric-dataset",
+    "href": "stonehenge.html#ray-centric-dataset",
+    "title": "stonehenge",
+    "section": "",
+    "text": "The code below encodes all training images into rays:\n\nsource\n\n\n\n create_rays (camera_data, M=199, downsampling_factor=1)\n\nCreate rays for the training images. Args: camera_data: Dictionary containing the camera data. M: Number of training images to use. downsampling_factor: Downsampling factor to apply to the images. Returns: x_samples: Tensor of shape (M, H, W, 6) containing the origins and directions of the rays. y_samples: Tensor of shape (M, H, W, 3) containing the color data for each pixel.\n\nx_samples, y_samples = create_rays(data, 2, downsampling_factor=4)\n# Check shapes:\ntest_eq(x_samples.shape, (2, 200, 200, 6))\ntest_eq(y_samples.shape, (2, 200, 200, 3))\n# Check type:\ntest_eq(x_samples.dtype, np.float32)\ntest_eq(y_samples.dtype, np.float32)\n\n\n# Uncomment the following line to save the file:\n# np.savez_compressed('training_rays.npz', x=x_samples, y=y_samples)\n\n# x_samples, y_samples = create_rays(data, 100, downsampling_factor=4)\n# np.savez_compressed('training_rays-100-4.npz', x=x_samples, y=y_samples)\n\n\nsource\n\n\n\n\n load_npz_from_url (url)\n\n*Loads a .npz file from the given URL and returns the contained arrays as a tuple.\nParameters: url (str): URL of the .npz file.\nReturns: tuple: A tuple containing the loaded numpy arrays, or None if the request fails.*\n\n# Example usage to download the full Zenodo version, takes 5m!\n# url = 'https://zenodo.org/records/10443662/files/training_rays.npz'\n# loaded_arrays = load_npz_from_url(url)\n# if loaded_arrays is not None:\n#     xs, ys = loaded_arrays\n\n# # check that they have the right shape:\n# test_eq(xs.shape, (199, 800, 800, 6))\n# test_eq(ys.shape, (199, 800, 800, 3))\n\n# # check that they are float32:\n# test_eq(xs.dtype, np.float32)\n# test_eq(ys.dtype, np.float32)\n\n\n# Make sure 199 images with down-sampling factor 4 are available, takes 18 seconds.\n# url = 'https://zenodo.org/records/10765346/files/training_rays-199-4.npz'\n# loaded_arrays = load_npz_from_url(url)\n# if loaded_arrays is not None:\n#     xs, ys = loaded_arrays\n\n# # check that they have the right shape:\n# test_eq(xs.shape, (199, 200, 200, 6))\n# test_eq(ys.shape, (199, 200, 200, 3))\n\n# # check that they are float32:\n# test_eq(xs.dtype, np.float32)\n# test_eq(ys.dtype, np.float32)\n\n\nsource\n\n\n\n\n download_rays (M=100, downsampling_factor=4)\n\n\n# Example usage to download the downs-sampled github version, 10-12 seconds\nxs, ys = download_rays()\n\n# check that they have the right shape:\ntest_eq(xs.shape, (100, 200, 200, 6))\ntest_eq(ys.shape, (100, 200, 200, 3))\n\n# check that they are float32:\ntest_eq(xs.dtype, np.float32)\ntest_eq(ys.dtype, np.float32)",
+    "crumbs": [
+      "stonehenge"
+    ]
+  },
+  {
+    "objectID": "CONTRIBUTING.html",
+    "href": "CONTRIBUTING.html",
+    "title": "How to contribute",
+    "section": "",
+    "text": "Before anything else, please install the git hooks that run automatic scripts during each commit and merge to strip the notebooks of superfluous metadata (and avoid merge conflicts). After cloning the repository, run the following command inside it:\nnbdev_install_git_hooks\n\n\n\n\nEnsure the bug was not already reported by searching on GitHub under Issues.\nIf you’re unable to find an open issue addressing the problem, open a new one. Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.\nBe sure to add the complete error messages.\n\n\n\n\nOpen a new GitHub pull request with the patch.\nEnsure that your PR includes a test that fails without your patch, and pass with it.\nEnsure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.\n\n\n\n\n\n\nKeep each PR focused. While it’s more convenient, do not combine several unrelated fixes together. Create as many branches as needing to keep each PR focused.\nDo not mix style changes/fixes with “functional” changes. It’s very difficult to review such PRs and it most likely get rejected.\nDo not add/remove vertical whitespace. Preserve the original style of the file you edit as much as you can.\nDo not turn an already submitted PR into your development playground. If after you submitted PR, you discovered that more work is needed - close the PR, do the required work and then submit a new PR. Otherwise each of your commits requires attention from maintainers of the project.\nIf, however, you submitted a PR and received a request for changes, you should proceed with commits inside that PR, so that the maintainer can see the incremental fixes and won’t need to review the whole PR again. In the exception case where you realize it’ll take many many commits to complete the requests, then it’s probably best to close the PR, do the work and then submit it again. Use common sense where you’d choose one way over another.\n\n\n\n\n\nDocs are automatically created from the notebooks in the nbs folder."
+  },
+  {
+    "objectID": "CONTRIBUTING.html#how-to-get-started",
+    "href": "CONTRIBUTING.html#how-to-get-started",
+    "title": "How to contribute",
+    "section": "",
+    "text": "Before anything else, please install the git hooks that run automatic scripts during each commit and merge to strip the notebooks of superfluous metadata (and avoid merge conflicts). After cloning the repository, run the following command inside it:\nnbdev_install_git_hooks"
+  },
+  {
+    "objectID": "CONTRIBUTING.html#did-you-find-a-bug",
+    "href": "CONTRIBUTING.html#did-you-find-a-bug",
+    "title": "How to contribute",
+    "section": "",
+    "text": "Ensure the bug was not already reported by searching on GitHub under Issues.\nIf you’re unable to find an open issue addressing the problem, open a new one. Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.\nBe sure to add the complete error messages.\n\n\n\n\nOpen a new GitHub pull request with the patch.\nEnsure that your PR includes a test that fails without your patch, and pass with it.\nEnsure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable."
+  },
+  {
+    "objectID": "CONTRIBUTING.html#pr-submission-guidelines",
+    "href": "CONTRIBUTING.html#pr-submission-guidelines",
+    "title": "How to contribute",
+    "section": "",
+    "text": "Keep each PR focused. While it’s more convenient, do not combine several unrelated fixes together. Create as many branches as needing to keep each PR focused.\nDo not mix style changes/fixes with “functional” changes. It’s very difficult to review such PRs and it most likely get rejected.\nDo not add/remove vertical whitespace. Preserve the original style of the file you edit as much as you can.\nDo not turn an already submitted PR into your development playground. If after you submitted PR, you discovered that more work is needed - close the PR, do the required work and then submit a new PR. Otherwise each of your commits requires attention from maintainers of the project.\nIf, however, you submitted a PR and received a request for changes, you should proceed with commits inside that PR, so that the maintainer can see the incremental fixes and won’t need to review the whole PR again. In the exception case where you realize it’ll take many many commits to complete the requests, then it’s probably best to close the PR, do the work and then submit it again. Use common sense where you’d choose one way over another."
+  },
+  {
+    "objectID": "CONTRIBUTING.html#do-you-want-to-contribute-to-the-documentation",
+    "href": "CONTRIBUTING.html#do-you-want-to-contribute-to-the-documentation",
+    "title": "How to contribute",
+    "section": "",
+    "text": "Docs are automatically created from the notebooks in the nbs folder."
+  },
+  {
+    "objectID": "html.html",
+    "href": "html.html",
+    "title": "html",
+    "section": "",
+    "text": "source\n\ntd\n\n td (obj)\n\nCreate a table entry from string or object with html representation.\nIf an object is not a string, try to use its _repr_html_ method:\n\ntest_eq(td(\"abc\"), '&lt;td style=\"text-align:left;\"&gt;abc&lt;/td&gt;')\n\nclass MyClass:\n    def _repr_html_(self): return \"&lt;span&gt;blah&lt;/span&gt;\"\ntest_eq(td(MyClass()), '&lt;td style=\"text-align:left;\"&gt;&lt;span&gt;blah&lt;/span&gt;&lt;/td&gt;')\n\n\nsource\n\n\nth\n\n th (cells)\n\nCreate a table header\n\nsource\n\n\ntr\n\n tr (cells)\n\nCreate a table row\n\nsource\n\n\nROW\n\n ROW (cells)\n\n\nsource\n\n\nrow\n\n row (cells)\n\nCreate a table with a single row\n\nsource\n\n\ntable\n\n table (rows, header='', cls:str='gtbook_table')\n\nCreate a table from rows\nCreate a table row\n\ntest_eq(tr([\"a\", \"b\"]),'&lt;tr&gt;\\n&lt;td style=\"text-align:left;\"&gt;a&lt;/td&gt;\\n&lt;td style=\"text-align:left;\"&gt;b&lt;/td&gt;\\n&lt;/tr&gt;')\n\n\nfrom IPython.display import HTML\n\n\n\n\n\n1\n2\n\n\na\nb\n\n\nc\nd\n\n\n\n\n\n\n\nHTML(table([tr([\"a\", \"b\"]), tr([\"c\", \"d\"])], header=th([\"1\", \"2\"])))\n\n\nHTML(table([tr([\"a\", \"b\"]) for j in range(4)]))\n\n\n\n\n\na\nb\n\n\na\nb\n\n\na\nb\n\n\na\nb\n\n\n\n\n\n\n\nimport gtsam\nfrom gtbook.display import show\n\n\nprior = gtsam.DiscreteDistribution((0,2),\"3/1\")\nHTML(row([prior, prior]))\n\n\n\n\n\n\n\n\n\n\nP(0):\n\n\n\n\n0\nvalue\n\n\n\n\n0\n0.75\n\n\n1\n0.25\n\n\n\n\n\n\nP(0):\n\n\n\n\n0\nvalue\n\n\n\n\n0\n0.75\n\n\n1\n0.25\n\n\n\n\n\n\n\n\n\n\n\n\nROW([prior, show(prior)])\n\n\n\n\n\n\n\n\n\n\nP(0):\n\n\n\n\n0\nvalue\n\n\n\n\n0\n0.75\n\n\n1\n0.25\n\n\n\n\n\n \n\n\n\nG\n\n  \n\n0x106c1ce80\n\n 0   \n\n0x106c15460\n\n 0.75   \n\n0x106c1ce80-&gt;0x106c15460\n\n    \n\n0x106c1bca0\n\n 0.25   \n\n0x106c1ce80-&gt;0x106c1bca0",
+    "crumbs": [
+      "html"
+    ]
+  },
+  {
+    "objectID": "vacuum.html",
+    "href": "vacuum.html",
+    "title": "vacuum",
+    "section": "",
+    "text": "test_eq(rooms, ['Living Room', 'Kitchen', 'Office', 'Hallway', 'Dining Room'])",
+    "crumbs": [
+      "vacuum"
+    ]
+  },
+  {
+    "objectID": "vacuum.html#state",
+    "href": "vacuum.html#state",
+    "title": "vacuum",
+    "section": "",
+    "text": "test_eq(rooms, ['Living Room', 'Kitchen', 'Office', 'Hallway', 'Dining Room'])",
+    "crumbs": [
+      "vacuum"
+    ]
+  },
+  {
+    "objectID": "vacuum.html#actions",
+    "href": "vacuum.html#actions",
+    "title": "vacuum",
+    "section": "Actions",
+    "text": "Actions\n\ntest_eq(action_space, ['L', 'R', 'U', 'D'])\n\n\nVARIABLES = Variables()\n\nX = VARIABLES.discrete_series(\"X\", [1, 2, 3], rooms) # states for times 1,2 and 3\nA = VARIABLES.discrete_series(\"A\", [1, 2], action_space) # actions for times 1 and 2\nmotion_model = gtsam.DiscreteConditional(X[2], [X[1], A[1]], action_spec)\npretty(motion_model)\n\n\n\n  P(X2|X1,A1):\n\n\n\n\nX1\nA1\n0\n1\n2\n3\n4\n\n\n\n\n0\n0\n1\n0\n0\n0\n0\n\n\n0\n1\n0.2\n0.8\n0\n0\n0\n\n\n0\n2\n1\n0\n0\n0\n0\n\n\n0\n3\n0.2\n0\n0\n0.8\n0\n\n\n1\n0\n0.8\n0.2\n0\n0\n0\n\n\n1\n1\n0\n1\n0\n0\n0\n\n\n1\n2\n0\n1\n0\n0\n0\n\n\n1\n3\n0\n0.2\n0\n0\n0.8\n\n\n2\n0\n0\n0\n1\n0\n0\n\n\n2\n1\n0\n0\n0.2\n0.8\n0\n\n\n2\n2\n0\n0\n1\n0\n0\n\n\n2\n3\n0\n0\n1\n0\n0\n\n\n3\n0\n0\n0\n0.8\n0.2\n0\n\n\n3\n1\n0\n0\n0\n0.2\n0.8\n\n\n3\n2\n0.8\n0\n0\n0.2\n0\n\n\n3\n3\n0\n0\n0\n1\n0\n\n\n4\n0\n0\n0\n0\n0.8\n0.2\n\n\n4\n1\n0\n0\n0\n0\n1\n\n\n4\n2\n0\n0.8\n0\n0\n0.2\n\n\n4\n3\n0\n0\n0\n0\n1",
+    "crumbs": [
+      "vacuum"
+    ]
+  },
+  {
+    "objectID": "vacuum.html#sensing",
+    "href": "vacuum.html#sensing",
+    "title": "vacuum",
+    "section": "Sensing",
+    "text": "Sensing\n\ntest_eq(sensor_spec, '1/1/8 1/1/8 2/7/1 8/1/1 1/8/1')",
+    "crumbs": [
+      "vacuum"
+    ]
+  },
+  {
+    "objectID": "vacuum.html#rl",
+    "href": "vacuum.html#rl",
+    "title": "vacuum",
+    "section": "RL",
+    "text": "RL\n\nsource\n\ncalculate_value_function\n\n calculate_value_function (R:&lt;built-infunctionarray&gt;, T:&lt;built-\n                           infunctionarray&gt;, pi:&lt;built-infunctionarray&gt;,\n                           gamma=0.9)\n\nCalculate value function for given policy\n\n\n\n\nType\nDefault\nDetails\n\n\n\n\nR\narray\n\nreward function as a tensor\n\n\nT\narray\n\ntransition probabilities as a tensor\n\n\npi\narray\n\npolicy, as a vector\n\n\ngamma\nfloat\n0.9\ndiscount factor\n\n\n\n\nsource\n\n\ncalculate_value_system\n\n calculate_value_system (R:&lt;built-infunctionarray&gt;, T:&lt;built-\n                         infunctionarray&gt;, pi:&lt;built-infunctionarray&gt;,\n                         gamma=0.9)\n\nCalculate A, b matrix of linear system for value computation.\n\n\n\n\nType\nDefault\nDetails\n\n\n\n\nR\narray\n\nreward function as a tensor\n\n\nT\narray\n\ntransition probabilities as a tensor\n\n\npi\narray\n\npolicy, as a vector\n\n\ngamma\nfloat\n0.9\ndiscount factor\n\n\n\n\n# From section 3.5:\nconditional = gtsam.DiscreteConditional((2,5), [(0,5), (1,4)], action_spec)\nR = np.empty((5, 4, 5), float)\nT = np.empty((5, 4, 5), float)\nfor assignment, value in conditional.enumerate():\n    x, a, y = assignment[0], assignment[1], assignment[2]\n    R[x, a, y] = 10.0 if y == rooms.index(\"Living Room\") else 0.0\n    T[x, a, y] = value\n\n\ntest_eq(R[2, 1], [10,  0,  0,  0,  0])\n\nCalculating the value function of a given policy pi:\n\nreasonable_policy = [2, 1, 0, 2, 1]\nAA, b = calculate_value_system(R, T, reasonable_policy)\ntest_close(\n    AA,\n    np.array(\n        [\n            [0.1, 0, 0, 0, 0],\n            [0, 0.1, 0, 0, 0],\n            [0, 0, 0.1, 0, 0],\n            [-0.72, 0, 0, 0.82, 0],\n            [0, 0, 0, 0, 0.1],\n        ]\n    ),\n)\ntest_close(b, np.array([10, 0, 0, 8, 0]))\n\n\nvalue_for_pi = calculate_value_function(R, T, reasonable_policy)\ntest_close(value_for_pi, np.array([100, 0, 0, 97.56097561, 0]))\n\n\noptimal_policy = [0, 0, 1, 2, 2]\nvalue_for_pi = calculate_value_function(R, T, optimal_policy)\ntest_close(\n    value_for_pi,\n    np.array([100, 97.56097561, 85.66329566, 97.56097561, 85.66329566]),\n)",
+    "crumbs": [
+      "vacuum"
+    ]
+  },
+  {
+    "objectID": "diffdrive.html",
+    "href": "diffdrive.html",
+    "title": "diffdrive",
+    "section": "",
+    "text": "Our simulated differential drive robot has a camera, so a lot of the code here is support for some computer vision.",
+    "crumbs": [
+      "diffdrive"
+    ]
+  },
+  {
+    "objectID": "diffdrive.html#pinhole-figures",
+    "href": "diffdrive.html#pinhole-figures",
+    "title": "diffdrive",
+    "section": "Pinhole Figures",
+    "text": "Pinhole Figures\nSome plotting support code to illustrate the pinhole camera model.\n\nsource\n\nshow_3d\n\n show_3d (fig)\n\n\nsource\n\n\nray\n\n ray (point3, F, color='orange')\n\n\nsource\n\n\nplane\n\n plane (Z:float)\n\n\nsource\n\n\naxes\n\n axes (length=1.5)\n\nAdd axes to a plotly figure\n\nfeet = gtsam.Point3(-3,0,5) # point at the feet of the person, 5 meters in front of camera, 3 meters to the left\nhead = gtsam.Point3(-3,-2,5) # point at the top of the head (note, Y = *minus* 2 meters)\nF = 1 # meter\nshow_3d(go.Figure(data = plane(-F) + [ray(feet, -F), ray(head, -F)] + axes()))\n\n\n\n\n\n\n\n\n\nshow_3d(go.Figure(data = plane(F) + [ray(feet, F), ray(head, F)] + axes()))",
+    "crumbs": [
+      "diffdrive"
+    ]
+  },
+  {
+    "objectID": "diffdrive.html#reading-images",
+    "href": "diffdrive.html#reading-images",
+    "title": "diffdrive",
+    "section": "Reading Images",
+    "text": "Reading Images\n\nsource\n\nread_image\n\n read_image (image_name)\n\nRead image from a the book repo\n\nimage_name = \"LL_color_1201754063.387872.bmp\"\nimage = read_image(image_name) # locally: PIL.Image.open(image_name)\nprint(f\"resolution = {image.width}x{image.height}\")\n\nresolution = 512x384\n\n\n\nimport matplotlib.pyplot as plt\n\n\nplt.imshow(image);\n\n\n\n\n\n\n\n\n\nfrom PIL import ImageOps\n\n\ngrayscale_image = PIL.ImageOps.grayscale(image)\nplt.imshow(grayscale_image, cmap=\"gray\");",
+    "crumbs": [
+      "diffdrive"
+    ]
+  },
+  {
+    "objectID": "diffdrive.html#easy-convolution",
+    "href": "diffdrive.html#easy-convolution",
+    "title": "diffdrive",
+    "section": "Easy Convolution",
+    "text": "Easy Convolution\n\nsource\n\nconv2\n\n conv2 (input, filter)\n\nConvolve input image of shape (iW,iH) with filter of shape (kW,kH)\n\ngrayscale = torch.from_numpy(np.asarray(grayscale_image, dtype=float))\nprint(f\"type={type(grayscale)}, dtype={grayscale.dtype}, shape={grayscale.shape}\")\nfilter = torch.tensor([[-1.0, 0.0, 1.0]], dtype=float)\nfilter.shape\n\ntype=&lt;class 'torch.Tensor'&gt;, dtype=torch.float64, shape=torch.Size([384, 512])\n\n\ntorch.Size([1, 3])\n\n\n\nvertical_edges = conv2(grayscale, filter)\nplt.imshow(vertical_edges, cmap=\"RdYlGn\");",
+    "crumbs": [
+      "diffdrive"
+    ]
+  },
+  {
+    "objectID": "gaussian.html",
+    "href": "gaussian.html",
+    "title": "gaussian",
+    "section": "",
+    "text": "Now largely built into gtsam.discrete.\n\nsource\n\nsample_bayes_net\n\n sample_bayes_net (bn:gtsam.gtsam.GaussianBayesNet, N:int)\n\nHigh performance ancestral sampling. It returns a dictionary of nj x N samples, where n_j is the dimensionality for key j.\n\nsource\n\n\nsample_conditional\n\n sample_conditional (node:gtsam.gtsam.GaussianConditional, N:int,\n                     parents:list=[], sample:dict={})\n\nSample from conditional\n\n_x_, _y_ = 11, 12\nbayesNet = gtsam.GaussianBayesNet()\nI_1x1 = np.eye(1, dtype=float)\nbayesNet.push_back(gtsam.GaussianConditional(_x_, [9.0], I_1x1, _y_, I_1x1))\nbayesNet.push_back(gtsam.GaussianConditional(_y_, [5.0], I_1x1))\n\nsample_bayes_net(bayesNet, 4)\n\n{12: array([[2.83568484, 5.93936955, 3.94485894, 6.90187555]]),\n 11: array([[5.2819049 , 2.60654641, 4.86926211, 0.530073  ]])}",
+    "crumbs": [
+      "gaussian"
+    ]
+  },
+  {
+    "objectID": "logistics.html",
+    "href": "logistics.html",
+    "title": "logistics",
+    "section": "",
+    "text": "Evaluating a Gaussian for a given mean and variance.\n\nsource\n\n\n\n gaussian (x:&lt;built-infunctionarray&gt;, mean=array([0., 0.]),\n           cov=array([[1., 0.],        [0., 1.]]))\n\nEvaluate multivariate Gaussian at x of shape(m,n), yields (m,) vector.\n\nmean = gtsam.Point2(50, 15)\ncov = np.array([[40, 35], [35, 40]])\nz0 = gaussian(mean, mean, cov)\n\nk = math.sqrt(np.linalg.det(2*math.pi*cov))\ntest_eq(z0, 1.0/k)\n\nz1 = gaussian(mean + gtsam.Point2(0, 1), mean, cov)\ntest_eq(z1, 0.007791877665890364)",
+    "crumbs": [
+      "logistics"
+    ]
+  },
+  {
+    "objectID": "logistics.html#gaussians",
+    "href": "logistics.html#gaussians",
+    "title": "logistics",
+    "section": "",
+    "text": "Evaluating a Gaussian for a given mean and variance.\n\nsource\n\n\n\n gaussian (x:&lt;built-infunctionarray&gt;, mean=array([0., 0.]),\n           cov=array([[1., 0.],        [0., 1.]]))\n\nEvaluate multivariate Gaussian at x of shape(m,n), yields (m,) vector.\n\nmean = gtsam.Point2(50, 15)\ncov = np.array([[40, 35], [35, 40]])\nz0 = gaussian(mean, mean, cov)\n\nk = math.sqrt(np.linalg.det(2*math.pi*cov))\ntest_eq(z0, 1.0/k)\n\nz1 = gaussian(mean + gtsam.Point2(0, 1), mean, cov)\ntest_eq(z1, 0.007791877665890364)",
+    "crumbs": [
+      "logistics"
+    ]
+  },
+  {
+    "objectID": "logistics.html#show-a-probability-map",
+    "href": "logistics.html#show-a-probability-map",
+    "title": "logistics",
+    "section": "Show a probability map",
+    "text": "Show a probability map\nNeeded to illustrate Markov localization.\n\nmap_coords.shape\n\n(50, 100, 2)\n\n\n\nimport plotly.io as pio\n\n\npio.renderers.default = \"png\"\n\n\nsource\n\nshow_map\n\n show_map (image=None, markers=None, file:str=None, marker={})\n\nShow image on warehouse map, possibly with markers\n\nmeans = [np.array([x, y]) for x, y in [(20, 25), (70, 40), (50, 15)]]\ncovariances = [np.diag([sx**2, sy**2]) for sx, sy in [(5, 10), (20, 5)]]\ncovariances.append(np.array([[40, 35], [35, 40]]))\n\nimage = np.zeros((50, 100))\nfor mean, cov in zip(means, covariances):\n    image += gaussian(map_coords, mean, cov)\nshow_map(image/np.max(image))",
+    "crumbs": [
+      "logistics"
+    ]
+  },
+  {
+    "objectID": "logistics.html#base-map-and-beacons",
+    "href": "logistics.html#base-map-and-beacons",
+    "title": "logistics",
+    "section": "Base Map and Beacons",
+    "text": "Base Map and Beacons\nDefining the example warehouse map, and illustrating where sensors are.\n\nshow_map(base_map, beacons)",
+    "crumbs": [
+      "logistics"
+    ]
+  },
+  {
+    "objectID": "logistics.html#show-samples",
+    "href": "logistics.html#show-samples",
+    "title": "logistics",
+    "section": "Show Samples",
+    "text": "Show Samples\nDisplaying samples on a map, for Monte Carlo Localization.\n\nfrom numpy.random import default_rng\n\n\nrng = default_rng()\n\n\nS = 3000\nprior = rng.multivariate_normal(means[0], covariances[0], size=S)\nshow_map(0.1*base_map, markers=prior,\n         marker=dict(size=3, color=\"red\", opacity=0.2))\n\n\n\n\n\n\n\n\n\nT = 100\nprior = rng.multivariate_normal(means[0], covariances[0], size=T)\nweights = rng.uniform(0, 30, size=T)\nshow_map(0.1*base_map, markers=prior,\n         marker=dict(size=weights, color=\"red\", opacity=0.2))",
+    "crumbs": [
+      "logistics"
+    ]
+  },
+  {
+    "objectID": "logistics.html#proximity-sensor",
+    "href": "logistics.html#proximity-sensor",
+    "title": "logistics",
+    "section": "Proximity Sensor",
+    "text": "Proximity Sensor\nDefining where a proximity sensor fires.\n\nshow_map(proximity_map_on)\n\n\n\n\n\n\n\n\n\nshow_map(proximity_map_off)",
+    "crumbs": [
+      "logistics"
+    ]
+  },
+  {
+    "objectID": "logistics.html#range-sensing",
+    "href": "logistics.html#range-sensing",
+    "title": "logistics",
+    "section": "Range Sensing:",
+    "text": "Range Sensing:\nDefining the “RFID” range sensing:\n\nsource\n\nout_of_rfid_range\n\n out_of_rfid_range (position, max_range=8)\n\nCheck if all beacons are out of range.\n\nsource\n\n\nrfid_measurement\n\n rfid_measurement (position, max_range=8)\n\nSimulate RFID reader that returns nearest RFID range or (None,inf).\n\nsource\n\n\nrfid_range\n\n rfid_range (position, beacon, max_range=8)\n\nReturn range to given beacon.\nOut of bounds map:\n\nshow_map(out_of_bound_map, beacons)",
+    "crumbs": [
+      "logistics"
+    ]
+  },
+  {
+    "objectID": "linear.html",
+    "href": "linear.html",
+    "title": "linear",
+    "section": "",
+    "text": "This code is used in the gtsam_examples book.",
+    "crumbs": [
+      "linear"
+    ]
+  },
+  {
+    "objectID": "linear.html#easy-creation-of-vectorvalues",
+    "href": "linear.html#easy-creation-of-vectorvalues",
+    "title": "linear",
+    "section": "Easy Creation of VectorValues",
+    "text": "Easy Creation of VectorValues\n\nsource\n\nvv\n\n vv (keys_vectors:Dict[int,numpy.ndarray])\n\nCreate a VectorValues from a dict\n\nx = {k:gtsam.symbol('x',k) for k in [1,2,3]}\nvv66 = vv({x[1]: [66]})\nassert isinstance(vv66, gtsam.VectorValues)\ntest_eq(vv66.size(),1)\ntest_eq(vv66.at(x[1]),66)\n\n\nvv34 = vv({x[1]:[3],x[2]:[4]})\nassert isinstance(vv34, gtsam.VectorValues)\ntest_eq(vv34.size(),2)\ntest_eq(vv34.at(x[1]),[3])\ntest_eq(vv34.at(x[2]),[4])",
+    "crumbs": [
+      "linear"
+    ]
+  },
+  {
+    "objectID": "linear.html#a-2d-points-gaussian-mrf",
+    "href": "linear.html#a-2d-points-gaussian-mrf",
+    "title": "linear",
+    "section": "A 2D Points Gaussian MRF",
+    "text": "A 2D Points Gaussian MRF\nWe create a grid of 2D points, connected in a 4-neighborhood, to show off clustered loopy belief propagation.",
+    "crumbs": [
+      "linear"
+    ]
+  },
+  {
+    "objectID": "drone.html",
+    "href": "drone.html",
+    "title": "drone",
+    "section": "",
+    "text": "source\n\n\n\n axes (*args, **kwargs)\n\nCreate 3 Scatter3d traces representing Pose3 coordinate frame.\n\nsource\n\n\n\n\n axes_figure (pose:gtsam.gtsam.Pose3, scale:float=1.0, labels:list=['X',\n              'Y', 'Z'])\n\nCreate plotly express figure with Pose3 coordinate frame.\n\naxes_figure(gtsam.Pose3(gtsam.Rot3.Yaw(math.radians(20)), [1,2,3]), scale=0.1, labels=[\"F\",\"L\",\"U\"])\n\n\n\n\n\n\n\n\n\nt1 = gtsam.Point3(0.1, 0.05, 0.01) # front-left\nt2 = gtsam.Point3(0.1,-0.05, 0.01) # front-right\nt3 = gtsam.Point3(-0.1, 0, 0.01) # back\nfig = px.scatter_3d(x=[t1[0], t2[0], t3[0]], y=[t1[1], t2[1], t3[1]], z=[t1[2], t2[2], t3[2]])\nfig.add_traces(axes(gtsam.Pose3(), scale=0.1, labels=[\"F\",\"L\",\"U\"]))\nfig.show()",
+    "crumbs": [
+      "drone"
+    ]
+  },
+  {
+    "objectID": "drone.html#coordinate-frames",
+    "href": "drone.html#coordinate-frames",
+    "title": "drone",
+    "section": "",
+    "text": "source\n\n\n\n axes (*args, **kwargs)\n\nCreate 3 Scatter3d traces representing Pose3 coordinate frame.\n\nsource\n\n\n\n\n axes_figure (pose:gtsam.gtsam.Pose3, scale:float=1.0, labels:list=['X',\n              'Y', 'Z'])\n\nCreate plotly express figure with Pose3 coordinate frame.\n\naxes_figure(gtsam.Pose3(gtsam.Rot3.Yaw(math.radians(20)), [1,2,3]), scale=0.1, labels=[\"F\",\"L\",\"U\"])\n\n\n\n\n\n\n\n\n\nt1 = gtsam.Point3(0.1, 0.05, 0.01) # front-left\nt2 = gtsam.Point3(0.1,-0.05, 0.01) # front-right\nt3 = gtsam.Point3(-0.1, 0, 0.01) # back\nfig = px.scatter_3d(x=[t1[0], t2[0], t3[0]], y=[t1[1], t2[1], t3[1]], z=[t1[2], t2[2], t3[2]])\nfig.add_traces(axes(gtsam.Pose3(), scale=0.1, labels=[\"F\",\"L\",\"U\"]))\nfig.show()",
+    "crumbs": [
+      "drone"
+    ]
+  },
+  {
+    "objectID": "drone.html#obstacle-maps",
+    "href": "drone.html#obstacle-maps",
+    "title": "drone",
+    "section": "Obstacle Maps",
+    "text": "Obstacle Maps\nAn obstacle map:\n\nsource\n\ncreate_random_map\n\n create_random_map (W, H, num_obstacles=50, seed=42)\n\nCreates a random occupancy map with the given dimensions and number of obstacles. Optionally, a seed can be provided to make the map reproducible.\n\n# Create a random cost map\nW, H = 30, 10  # 30m x 10m\ncost_map = create_random_map(W, H, num_obstacles=50, seed=7)\nfig = px.imshow(cost_map, color_continuous_scale='Reds')\nfig.update_layout(coloraxis_showscale=False, margin=dict(l=0, r=0, t=0, b=0), width=1000)\nfig.show()",
+    "crumbs": [
+      "drone"
+    ]
+  },
+  {
+    "objectID": "drone.html#gaussian-kernel",
+    "href": "drone.html#gaussian-kernel",
+    "title": "drone",
+    "section": "Gaussian Kernel",
+    "text": "Gaussian Kernel\nFor smoothing the cost map and optimizing over it:\n\nsource\n\ngaussian_filter\n\n gaussian_filter (sigma, uv, image, K=9)\n\nApplies a Gaussian filter at uv on the given image.\n\nsource\n\n\ngaussian_kernel\n\n gaussian_kernel (sigma:float, K:int=9)\n\nGenerates a Gaussian kernel of shape (1, 1, K, K) with standard deviation sigma.\n\nsource\n\n\ndisplaced_gaussian\n\n displaced_gaussian (sigma:float, K:int, uv:numpy.ndarray)\n\nReturns a Gaussian kernel of size K x K with standard deviation sigma. The kernel is centered at uv, a float coordinate in xy convention. Also returns the indices of the kernel in the image.\n\nsigma = 0.5  # 0.5m standard deviation for the Gaussian kernel\nK = 21 # 21x21 kernel is big enough to accommodate that standard deviation \nkernel = gaussian_kernel(sigma*10, K) # multiply by 10 as map is 10cm resolution\nbatch = cost_map[None, None, ...]  # Add batch and channel dimensions\nblurred = torch.conv2d(batch, kernel, padding='same')[0, 0, ...]\nfig = px.imshow(blurred, color_continuous_scale='Reds')\nfig.update_layout(coloraxis_showscale=False, margin=dict(l=0, r=0, t=0, b=0), width=1000)\nfig.show()\n\n\n\n\n\n\n\n\n\nxy = gtsam.Point2(7.5, 5.3) # point in map, in meters\nuv = 10*xy # continuous position in image\nlocal_result = gaussian_filter(sigma*10, uv, cost_map, K)\nprint(f\"Local cost at {xy} is {local_result:.3f}\")\n\n# When uv are at integer values, blurred image gives the same result:\nassert np.allclose(local_result, blurred[int(uv[1]), int(uv[0])])\n\nLocal cost at [7.5 5.3] is 0.135\n\n\n\nsource\n\n\nsobel_kernels\n\n sobel_kernels (dtype=torch.float32, **kwargs)\n\nReturn Sobel gradient kernels sobel_u of shape (1, 1, 1, 3) and sobel_v of shape (1, 1, 3, 1).",
+    "crumbs": [
+      "drone"
+    ]
+  },
+  {
+    "objectID": "drone.html#polynomial-smoothing",
+    "href": "drone.html#polynomial-smoothing",
+    "title": "drone",
+    "section": "Polynomial Smoothing",
+    "text": "Polynomial Smoothing\nA small class to fit a pseudo-spectral Chebyshev basis:\n\nsource\n\nSmoothTrajectory\n\n SmoothTrajectory (path:&lt;built-infunctionarray&gt;, N:int=5, a:float=-1,\n                   b:float=1, sample:bool=False, boundaries:bool=False)\n\nConstruct a polynomial fit of degree N-1, e.g. N=4 is a cubic. Args: path: An array of shape (K, 3) representing a 3D path. N: The number of control points. a: The lower bound of the time interval. b: The upper bound of the time interval. sample: If True, sample the path at N Chebyshev nodes of the second kind. boundaries: If True, constrain the start and end points to be constant velocity.\n\n# Create a random path of shape (K, 3):\nrng = np.random.default_rng(seed=42)\nK = 100\npath = rng.random((K, 3))\n\nT = 20.0\n# exercise various options:\nsmooth = SmoothTrajectory(path, N=20, a=0, b=T, boundaries=True)\nassert smooth.points.shape == (20, 3)\nsmooth = SmoothTrajectory(path, N=20, a=0, b=T, boundaries=False)\nassert smooth.points.shape == (20, 3)\nsmooth = SmoothTrajectory(path, N=20, a=0, b=T, sample=True)\nassert smooth.points.shape == (20, 3)",
+    "crumbs": [
+      "drone"
+    ]
+  },
+  {
+    "objectID": "drone.html#showing-trajectories",
+    "href": "drone.html#showing-trajectories",
+    "title": "drone",
+    "section": "Showing Trajectories",
+    "text": "Showing Trajectories\n\nsource\n\nshow_executed\n\n show_executed (desired_rn:numpy.ndarray, rn:numpy.ndarray,\n                nRb:numpy.ndarray, K:int, step:int)\n\nShow the executed trajectory in 3D.",
+    "crumbs": [
+      "drone"
+    ]
+  },
+  {
+    "objectID": "drone.html#a-drone-class",
+    "href": "drone.html#a-drone-class",
+    "title": "drone",
+    "section": "A Drone class",
+    "text": "A Drone class\nCombine the two classes in 7.2 into one dataclass for use in 7.5.\n\nsource\n\nDrone\n\n Drone (rn:&lt;function Point3&gt;, vn:&lt;function Point3&gt;, nRb:gtsam.gtsam.Rot3,\n        wb:&lt;function Point3&gt;, g:float=9.81, mass:float=1.0,\n        k_d:float=0.0425, I_xy:float=0.006000000000000001,\n        I_z:float=0.012000000000000002)\n\nA simple drone model with 6DOF dynamics.\nA drone pitching and accelerating forwards:\n\nzero = lambda : gtsam.Point3(0, 0, 0)\npitch = math.radians(10)\nf = 9.81 / math.cos(pitch)\ndrone = Drone(rn=zero(), vn=zero(), nRb=gtsam.Rot3.Pitch(pitch), wb=zero())\n\ndrone.integrate(f, zero(), dt=1)\nprint(drone)\nassert np.allclose(drone.rn, gtsam.Point3(1.72976768, 0, 0))\nassert np.allclose(drone.vn, gtsam.Point3(1.72976768, 0, 0))\nassert np.allclose(drone.wb, gtsam.Point3(0, 0, 0))\n\nfig = px.scatter_3d(x=[0], y=[0], z=[0])\nscale, labels = 10, [\"F\", \"L\", \"U\"]\nfig.add_traces(axes(drone.pose(), scale, labels))\nfor k in range(10):\n    drone.integrate(f, zero(), dt=1)\n    fig.add_traces(axes(drone.pose(), scale, labels))\nfig.update_layout(showlegend=False, scene_aspectmode='data').show()\n\nDrone:\nrn=[1.72976768 0.         0.        ]\nvn=[1.72976768 0.         0.        ]\nnRb=R: [\n    0.984808, 0, 0.173648;\n    0, 1, 0;\n    -0.173648, 0, 0.984808\n]\nwb=[0. 0. 0.]",
+    "crumbs": [
+      "drone"
+    ]
+  },
+  {
+    "objectID": "display.html",
+    "href": "display.html",
+    "title": "display",
+    "section": "",
+    "text": "For showing graphs, Graphviz and its python wrapper need to be installed. I did that with conda install python-graphviz which also installs graphviz, but these are installed by default on Google’s colabs.\nSome GTSAM objects have a dot method, but notebooks cannot render this. We use a trick, by the following small class, inherting from graphviz.Source :\n\nsource\n\n\n\n show (obj, *args, **kwargs)\n\nDisplay an object with a dot method as a graph.\n\nfrom gtsam import DiscreteBayesNet, DiscreteFactorGraph\n\n\nAsia = (0, 2)\nSmoking = (1, 2)\nTuberculosis = (2, 2)\nLungCancer = (3, 2)\nEither = (4, 2)\n\nbayesNet = DiscreteBayesNet()\nbayesNet.add(Asia, \"99/1\")\nbayesNet.add(Smoking, \"50/50\")\nbayesNet.add(Tuberculosis, [Asia], \"99/1 95/5\")\nbayesNet.add(LungCancer, [Smoking], \"99/1 90/10\")\nbayesNet.add(Either, [Tuberculosis, LungCancer], \"F T T T\")\n\n\nshow(bayesNet)\n\n\n\n\n\n\n\n\nWe can, however, create our own formatter in python, and pass it as an optional argument:\n\ndomain = [\"Asia\", \"Smoking\", \"Tuberculosis\", \"LungCancer\", \"Either\"]\ndef keyFormatter(key): return domain[key]\n\n\nshow(bayesNet, keyFormatter)\n\n\n\n\n\n\n\n\nIt also works for factor graphs, as illustrated below:\n\n# convert bayesNet to a factor graph and render:\nfg = DiscreteFactorGraph(bayesNet)\nshow(fg, keyFormatter, binary_edges=True)\n\n\n\n\n\n\n\n\nFactor graph graphviz rendering can be customized even more, through a DotWriter object. For example, the following displays the “primamry constraint graph”:\n\nfrom gtsam import DotWriter\n\n\nwriter = DotWriter(figureWidthInches=5, figureHeightInches=5,\n                   plotFactorPoints=False, binaryEdges=False)\nshow(fg, keyFormatter, writer)\n\n\n\n\n\n\n\n\nIndividual factors can also be shown, althoug arrows are not labeled (yet):\n\nshow(fg.at(2))",
+    "crumbs": [
+      "display"
+    ]
+  },
+  {
+    "objectID": "display.html#showing-graphs",
+    "href": "display.html#showing-graphs",
+    "title": "display",
+    "section": "",
+    "text": "For showing graphs, Graphviz and its python wrapper need to be installed. I did that with conda install python-graphviz which also installs graphviz, but these are installed by default on Google’s colabs.\nSome GTSAM objects have a dot method, but notebooks cannot render this. We use a trick, by the following small class, inherting from graphviz.Source :\n\nsource\n\n\n\n show (obj, *args, **kwargs)\n\nDisplay an object with a dot method as a graph.\n\nfrom gtsam import DiscreteBayesNet, DiscreteFactorGraph\n\n\nAsia = (0, 2)\nSmoking = (1, 2)\nTuberculosis = (2, 2)\nLungCancer = (3, 2)\nEither = (4, 2)\n\nbayesNet = DiscreteBayesNet()\nbayesNet.add(Asia, \"99/1\")\nbayesNet.add(Smoking, \"50/50\")\nbayesNet.add(Tuberculosis, [Asia], \"99/1 95/5\")\nbayesNet.add(LungCancer, [Smoking], \"99/1 90/10\")\nbayesNet.add(Either, [Tuberculosis, LungCancer], \"F T T T\")\n\n\nshow(bayesNet)\n\n\n\n\n\n\n\n\nWe can, however, create our own formatter in python, and pass it as an optional argument:\n\ndomain = [\"Asia\", \"Smoking\", \"Tuberculosis\", \"LungCancer\", \"Either\"]\ndef keyFormatter(key): return domain[key]\n\n\nshow(bayesNet, keyFormatter)\n\n\n\n\n\n\n\n\nIt also works for factor graphs, as illustrated below:\n\n# convert bayesNet to a factor graph and render:\nfg = DiscreteFactorGraph(bayesNet)\nshow(fg, keyFormatter, binary_edges=True)\n\n\n\n\n\n\n\n\nFactor graph graphviz rendering can be customized even more, through a DotWriter object. For example, the following displays the “primamry constraint graph”:\n\nfrom gtsam import DotWriter\n\n\nwriter = DotWriter(figureWidthInches=5, figureHeightInches=5,\n                   plotFactorPoints=False, binaryEdges=False)\nshow(fg, keyFormatter, writer)\n\n\n\n\n\n\n\n\nIndividual factors can also be shown, althoug arrows are not labeled (yet):\n\nshow(fg.at(2))",
+    "crumbs": [
+      "display"
+    ]
+  },
+  {
+    "objectID": "display.html#html",
+    "href": "display.html#html",
+    "title": "display",
+    "section": "HTML",
+    "text": "HTML\nHTML can be rendered natively, like so:\n\nbayesNet\n\n\nDiscreteBayesNet of size 5\n  P(0):\n\n\n\n\n\n0\nvalue\n\n\n\n\n0\n0.99\n\n\n1\n0.01\n\n\n\n\n\nP(1):\n\n\n\n\n1\nvalue\n\n\n\n\n0\n0.5\n\n\n1\n0.5\n\n\n\n\n\nP(2|0):\n\n\n\n0\n0\n1\n\n\n\n\n0\n0.99\n0.01\n\n\n1\n0.95\n0.05\n\n\n\n\n\nP(3|1):\n\n\n\n1\n0\n1\n\n\n\n\n0\n0.99\n0.01\n\n\n1\n0.9\n0.1\n\n\n\n\n\nP(4|2,3):\n\n\n\n2\n3\n0\n1\n\n\n\n\n0\n0\n1\n0\n\n\n0\n1\n0\n1\n\n\n1\n0\n0\n1\n\n\n1\n1\n0\n1\n\n\n\n\n\n\n\n\n\n\nHowever, to provide optional arguments, we have to resort to a similar trick:\n\nsource\n\npretty\n\n pretty (obj, *args)\n\nRender an object as html with optional arguments.\n\npose = gtsam.Pose2(12.4, 42.5, math.radians(45))\npretty(pose)\n\n(x=12.4, y=42.5, theta=45.0)\n\n\n\npretty(bayesNet, keyFormatter)\n\n\nDiscreteBayesNet of size 5\n  P(Asia):\n\n\n\n\n\nAsia\nvalue\n\n\n\n\n0\n0.99\n\n\n1\n0.01\n\n\n\n\n\nP(Smoking):\n\n\n\n\nSmoking\nvalue\n\n\n\n\n0\n0.5\n\n\n1\n0.5\n\n\n\n\n\nP(Tuberculosis|Asia):\n\n\n\nAsia\n0\n1\n\n\n\n\n0\n0.99\n0.01\n\n\n1\n0.95\n0.05\n\n\n\n\n\nP(LungCancer|Smoking):\n\n\n\nSmoking\n0\n1\n\n\n\n\n0\n0.99\n0.01\n\n\n1\n0.9\n0.1\n\n\n\n\n\nP(Either|Tuberculosis,LungCancer):\n\n\n\nTuberculosis\nLungCancer\n0\n1\n\n\n\n\n0\n0\n1\n0\n\n\n0\n1\n0\n1\n\n\n1\n0\n0\n1\n\n\n1\n1\n0\n1\n\n\n\n\n\n\n\n\n\n\nFactor graphs work as well:\n\ngraph = DiscreteFactorGraph()\ngraph.add([Asia, Smoking], \"4 1 10 4\")\npretty(graph, keyFormatter)\n\n\nDiscreteFactorGraph of size 1factor 0:\n\n\n\n\nAsia\nSmoking\nvalue\n\n\n\n\n0\n0\n4\n\n\n0\n1\n1\n\n\n1\n0\n10\n\n\n1\n1\n4\n\n\n\n\n\n\n\n\nAnd Bayes trees:\n\nfg = DiscreteFactorGraph(bayesNet)\nbt = fg.eliminateMultifrontal()\npretty(bt, keyFormatter)\n\n\nDiscreteBayesTree of size 5\n  P(Asia,Tuberculosis):\n\n\n\n\n\nAsia\nTuberculosis\nvalue\n\n\n\n\n0\n0\n0.9801\n\n\n0\n1\n0.0099\n\n\n1\n0\n0.0095\n\n\n1\n1\n0.0005\n\n\n\n\n\nP(LungCancer,Either|Tuberculosis):\n\n\n\nTuberculosis\n00\n01\n10\n11\n\n\n\n\n0\n0.945\n0\n0\n0.055\n\n\n1\n0\n0.945\n0\n0.055\n\n\n\n\n\nP(Smoking|LungCancer):\n\n\n\nLungCancer\n0\n1\n\n\n\n\n0\n0.52381\n0.47619\n\n\n1\n0.0909091\n0.909091\n\n\n\n\n\n\n\n\n\nAnd with a different (worse) ordering:\n\nordering = gtsam.Ordering()\nordering.push_back(Either[0])\nordering.push_back(LungCancer[0])\nordering.push_back(Tuberculosis[0])\nordering.push_back(Smoking[0])\nordering.push_back(Asia[0])\nbt2 = fg.eliminateMultifrontal(ordering)\npretty(bt2, keyFormatter)\n\n\nDiscreteBayesTree of size 5\n  P(Tuberculosis,Smoking,Asia):\n\n\n\n\n\nTuberculosis\nSmoking\nAsia\nvalue\n\n\n\n\n0\n0\n0\n0.49005\n\n\n0\n0\n1\n0.00475\n\n\n0\n1\n0\n0.49005\n\n\n0\n1\n1\n0.00475\n\n\n1\n0\n0\n0.00495\n\n\n1\n0\n1\n0.00025\n\n\n1\n1\n0\n0.00495\n\n\n1\n1\n1\n0.00025\n\n\n\n\n\nP(LungCancer|Smoking,Tuberculosis):\n\n\n\nSmoking\nTuberculosis\n0\n1\n\n\n\n\n0\n0\n0.99\n0.01\n\n\n0\n1\n0.99\n0.01\n\n\n1\n0\n0.9\n0.1\n\n\n1\n1\n0.9\n0.1\n\n\n\n\n\nP(Either|Tuberculosis,LungCancer):\n\n\n\nTuberculosis\nLungCancer\n0\n1\n\n\n\n\n0\n0\n1\n0\n\n\n0\n1\n0\n1\n\n\n1\n0\n0\n1\n\n\n1\n1\n0\n1\n\n\n\n\n\n\n\n\n\nWorks now for VectorValues as well, typically without formatter as default KeyFormatter kicks in for symbols.\n\nvv = gtsam.VectorValues()\nX =  gtsam.symbol_shorthand.X\nvv.insert(X(1), gtsam.Point2(2, 3.1))\nvv.insert(X(2), gtsam.Point2(4, 5.2))\nvv.insert(X(5), gtsam.Point2(6, 7.3))\nvv.insert(X(7), gtsam.Point2(8, 9.4))\nvv\n\n\n\n\n\n\n\nVariable\nvalue\n\n\n\n\nx1\n2 3.1\n\n\nx2\n4 5.2\n\n\nx5\n6 7.3\n\n\nx7\n8 9.4",
+    "crumbs": [
+      "display"
+    ]
+  },
+  {
+    "objectID": "display.html#domains",
+    "href": "display.html#domains",
+    "title": "display",
+    "section": "Domains",
+    "text": "Domains\nWe also provide support for the Variables data structure:\n\nvariables = Variables()\nT = variables.discrete(\"Tuberculosis\", [\"-\", \"+\"])\nL = variables.discrete(\"LungCancer\", [\"No\", \"Yes\"])\nC = variables.discrete(\"Either\", [\"Nope\", \"One or both\"])\n\nfragment = DiscreteBayesNet()\nfragment.add(T, \"99/1\")\nfragment.add(L, \"50/50\")\nfragment.add(C, [T, L],  \"F T T T\")\n\n\npretty(fragment, variables)\n\n\nDiscreteBayesNet of size 3\n  P(Tuberculosis):\n\n\n\n\n\nTuberculosis\nvalue\n\n\n\n\n-\n0.99\n\n\n+\n0.01\n\n\n\n\n\nP(LungCancer):\n\n\n\n\nLungCancer\nvalue\n\n\n\n\nNo\n0.5\n\n\nYes\n0.5\n\n\n\n\n\nP(Either|Tuberculosis,LungCancer):\n\n\n\nTuberculosis\nLungCancer\nNope\nOne or both\n\n\n\n\n-\nNo\n1\n0\n\n\n-\nYes\n0\n1\n\n\n+\nNo\n0\n1\n\n\n+\nYes\n0\n1\n\n\n\n\n\n\n\n\n\n\n\nassignment = variables.assignment({C: \"Nope\"})\nassert pretty(assignment)._repr_html_() == 'DiscreteValues{2: 0}'\npretty(assignment, variables)\n\n\n\n\n\n\n\nVariable\nvalue\n\n\n\n\nEither\nNope\n\n\n\n\n\n\n\n\nAnd of course, showing a graph as well:\n\nshow(fragment, variables)",
+    "crumbs": [
+      "display"
+    ]
+  },
+  {
+    "objectID": "display.html#formatting-hmms",
+    "href": "display.html#formatting-hmms",
+    "title": "display",
+    "section": "Formatting HMMS",
+    "text": "Formatting HMMS\nHMMs, and in general dynamic Bayes nets, should really be shown left to right. We create a writer with appropriate variablePositions is the object given to show is a Bayes net with X/A/Z variables:\n\nA = variables.discrete_series('A', range(2), [\"U\", \"D\"])\nX = variables.discrete_series('X', range(3), [\"room1\", \"room2\"])\nZ = variables.discrete_series('Z', range(3), [\"light\", \"dark\"])\nhmm = DiscreteBayesNet()\nhmm.add(X[0], \"99/1\")\nfor k in range(2):\n    hmm.add(X[k+1], [X[k], A[k]],  \"1/2 3/4 1/2 3/4\")\nfor k in range(3):\n    hmm.add(Z[k], [X[k]],  \"1/2 3/4\")\nshow(hmm, variables, hints={\"A\":2, \"X\":1, \"Z\":0}, boxes={A[0][0],A[1][0]})\n\n\n\n\n\n\n\n\n\nfg = gtsam.DiscreteFactorGraph(hmm)\nshow(fg, variables, hints={\"A\":2, \"X\":1, \"Z\":0})",
+    "crumbs": [
+      "display"
+    ]
+  },
+  {
+    "objectID": "display.html#displaying-a-nonlinearfactorgraph",
+    "href": "display.html#displaying-a-nonlinearfactorgraph",
+    "title": "display",
+    "section": "Displaying a NonlinearFactorGraph",
+    "text": "Displaying a NonlinearFactorGraph\n\nfg = gtsam.NonlinearFactorGraph()\nmodel = gtsam.noiseModel.Unit.Create(2)\nfg.push_back(gtsam.BetweenFactorPoint2(1, 2, [1,1], model))\nvalues = gtsam.Values()\nvalues.insert(1, [1,1])\nvalues.insert(2, [2,2])\nshow(fg, values)",
+    "crumbs": [
+      "display"
+    ]
+  },
+  {
+    "objectID": "cli.html",
+    "href": "cli.html",
+    "title": "CLI tools",
+    "section": "",
+    "text": "A little script to correct chapter indices to base 1:\n\nsource\n\nrename\n\n rename (dir:str, suffix:str='.ipynb')\n\nRename notebooks to base 1 for chapters.\n\n\n\n\nType\nDefault\nDetails\n\n\n\n\ndir\nstr\n\ndir in which to rename files\n\n\nsuffix\nstr\n.ipynb\nsuffix of files to change\n\n\n\nA function to read a notebook and fix its colab links:\n\nsource\n\n\nfix_colab_links\n\n fix_colab_links (nb:dict, name:str)\n\nFix colab links in nb\n\n# Let's read a notebook in the test folder\n# No longer works in nbdev2 as it \"fixes\" the files in test, even when recursive = false\n# name = 'nb_with_colab_link'\n# nb = json.loads(open(f'test/{name}.ipynb', 'r', encoding='utf-8').read())\n\n# fix_colab_links(nb, 'nb_with_colab_link')\n\n# assert _colab_link_name(nb) == name\n# assert nb['metadata']['colab']['name'] == name + '.ipynb'\n\nAssertionError: \n\n\nA script to do this for all the notebooks\n\nsource\n\n\nfix_nbs_colab_links\n\n fix_nbs_colab_links (dir:str)\n\nFix colab links in all notebooks in directory.\n\n\n\n\nType\nDetails\n\n\n\n\ndir\nstr\ndir in which to rename files",
+    "crumbs": [
+      "CLI tools"
+    ]
+  },
+  {
+    "objectID": "discrete.html",
+    "href": "discrete.html",
+    "title": "discrete",
+    "section": "",
+    "text": "This notebook contains some utility functions for discrete inference, primarily for use in Chapter 2 of the book.",
+    "crumbs": [
+      "discrete"
+    ]
+  },
+  {
+    "objectID": "discrete.html#discreteprior",
+    "href": "discrete.html#discreteprior",
+    "title": "discrete",
+    "section": "DiscretePrior",
+    "text": "DiscretePrior\nDiscretePrior is something that was previously defined here but is now built into GTSAM as DiscreteDistribution:\n\nfrom gtbook.display import show\n\n\nC = 0, 5  # A key is an identifier (0 in this example) and a cardinality (e.g., 5)\nprior = gtsam.DiscreteDistribution(C, \"25/20/30/20/5\")\ntest_eq(prior.empty(), False)\n\n# TODO: this does not support key formatting yet, just shows the key (0 in this case)\nshow(prior)\n\n\n\n\n\n\n\n\n\nprior_probability_for_3 = prior(3)\ntest_eq(prior_probability_for_3, 0.2)",
+    "crumbs": [
+      "discrete"
+    ]
+  },
+  {
+    "objectID": "discrete.html#variables",
+    "href": "discrete.html#variables",
+    "title": "discrete",
+    "section": "Variables",
+    "text": "Variables\nWe would like to make it easier for people to create discrete variables, with a meaningful name, and meaningful strings associated with discrete values. Below is it possible design:\n\nsource\n\nVariables\n\n Variables ()\n\nA problem domain for discrete variables.\n\nsource\n\n\nDiscreteVariable\n\n DiscreteVariable (name:str, domain:list[str])\n\n\n\nCreating discrete variables\nHere is an example: - we first create the variables instance - then define a new discrete category using the discrete method - we then check that it has a name and a domain\n\nvariables = Variables()\ncategories = [\"cardboard\", \"paper\", \"can\", \"scrap metal\", \"bottle\"]\nCategory = variables.discrete(\"Category\", categories)\n\ntest_eq(variables.name(Category), \"Category\")\ntest_eq(variables.domain(Category), categories)\n\nBinary variables are supported as a special case:\n\nConductivity = variables.binary(\"Conductivity\")\ntest_eq(variables.domain(Conductivity), [\"false\", \"true\"])\n\n\n\nAssignments\nProviding the domains to the Variables data structure also makes it easy to create an assignment. An assignment, which has the type DiscreteValues in GTSAM, is a mapping from discrete keys to discrete values.\n\nassignment = variables.assignment({Category: \"can\"})\ntest_eq(isinstance(assignment, gtsam.DiscreteValues), True)\ntest_eq(assignment[C[0]], categories.index(\"can\"))\n\n\n\nRendering assignments\nWe also create a markdown renderer for DiscreteValues , awaiting the ability of pybind11 to wrap classes inherited from STL containers:\nWe have the functionality to provide a key formatter\n\nkeyFormatter = variables.keyFormatter()\ntest_eq(keyFormatter(Category[0]), \"Category\")\n\nWe can also create a names dictionary that allows our rendering code to retrieve the domain for a given key:\n\nnames = variables.names()\ntest_eq(isinstance(names, dict), True)\ntest_eq(len(names), 2)\ntest_eq(names, {0: ['cardboard', 'paper', 'can', 'scrap metal', 'bottle'], 1: ['false', 'true']})\n\nWith these 2 in hand, we could create a markdown renderer:\n\ntest_eq(\n    variables.values_markdown(assignment),\n    \"|Variable|value|\\n|:-:|:-:|\\n|Category|can|\\n\",\n)\n\nAnd HTML:\n\nHTML(variables.values_html(assignment))\n\n\n\n\n\n\n\nVariable\nvalue\n\n\n\n\nCategory\ncan\n\n\n\n\n\n\n\n\n\n\nSeries of discrete variables\nAs of version 0.0.14 , we also support generating a set of discrete keys with integer indices, to support reasoning over time:\n\nn = variables.size()\n\n# add 5 variables\nstates = variables.discrete_series('s', range(1,5), [\"no\", \"yes\"])\ntest_eq(variables.size(), n+4)\n\n# calling twice should not add any more\nstates = variables.discrete_series('s', range(1,5), [\"no\", \"yes\"])\ntest_eq(variables.size(), n+4)\n\ntest_eq(variables.name(states[1]), \"s1\")\ntest_eq(variables.domain(states[1]), [\"no\", \"yes\"])\n\n\nn = variables.size()\n\n# expand range\nstates = variables.discrete_series('s', range(9,10), [\"no\", \"yes\"])\ntest_eq(variables.size(), n+1)\ntest_eq(variables.name(states[9]), \"s9\")\n\n\n\nRendering all variables defined\nIt would be nice to inspect a Variables instance easily in a notebook, and we can easily support this by supplying an HTML representation::\n\nvariables\n\n\n\n\n\n\n\nVariable\nDomain\n\n\n\n\nCategory\ncardboard, paper, can, scrap metal, bottle\n\n\nConductivity\nfalse, true\n\n\ns1\nno, yes\n\n\ns2\nno, yes\n\n\ns3\nno, yes\n\n\ns4\nno, yes\n\n\ns9\nno, yes",
+    "crumbs": [
+      "discrete"
+    ]
+  },
+  {
+    "objectID": "dbn.html",
+    "href": "dbn.html",
+    "title": "dbn",
+    "section": "",
+    "text": "The only code defined here is intended for internal use in gtbook display. If you have a need to use it, you can import it as follows:\nfrom gtbook.dbn import dbn_writer, has_positions\nCreate or amend a DotWriter to be use in show:\n\nsource\n\nhas_positions\n\n has_positions (writer)\n\nCheck if writer has positions for engine selection\n\nsource\n\n\ndbn_writer\n\n dbn_writer (writer=None, hints:dict=None, positions:dict=None,\n             boxes:set=None, factor_positions:dict=None,\n             binary_edges=False, **kwargs)\n\nCreate a DotWriter depending on input arguments: If writer is supplied, we will add but not overwrite hints or positions.\n\n# Check None cases\nassert dbn_writer() is None\nassert dbn_writer(exact=True) is None\n\n# Check passthrough\nwriter = GraphvizFormatting()\ntest_eq(dbn_writer(writer), writer)\ntest_eq(has_positions(writer), False)\n\n# Check boxes, and that they don't stomp\nwriter = dbn_writer(boxes={1, 2})\ntest_eq(writer.boxes, {1, 2})\nwriter = dbn_writer(writer, boxes={2, 3})\ntest_eq(writer.boxes, {1, 2, 3})\ntest_eq(has_positions(writer), False)\n\n# Check hints, and that they don't stomp\nwriter = dbn_writer(hints={\"A\": 2})\ntest_eq(writer.positionHints, {\"A\": 2})\nwriter = dbn_writer(writer, hints={\"A\": 3})\ntest_eq(writer.positionHints, {\"A\": 2})\ntest_eq(has_positions(writer), True)\n\n# Check positions, and that they don't stomp\nkey = 123\nwriter = dbn_writer(positions={key: (2, 0)})\ntest_eq(len(writer.variablePositions), 1)\nwriter = dbn_writer(writer, positions={key: (3, 0)})\ntest_eq(len(writer.variablePositions), 1)\ntest_eq(writer.variablePositions[key], (2, 0))\ntest_eq(has_positions(writer), True)\n\n# Check factor positions, and that they don't stomp\ni = 0\nwriter = dbn_writer(factor_positions={i: (2, 0)})\ntest_eq(len(writer.factorPositions), 1)\nwriter = dbn_writer(writer, factor_positions={i: (3, 0)})\ntest_eq(len(writer.factorPositions), 1)\ntest_eq(writer.factorPositions[i], (2, 0))\ntest_eq(has_positions(writer), True)",
+    "crumbs": [
+      "dbn"
+    ]
+  },
+  {
+    "objectID": "driving.html",
+    "href": "driving.html",
+    "title": "driving",
+    "section": "",
+    "text": "source\n\n\n\n read_ply (filename:str)\n\n*Read a binary_little_endian .ply file and return data as a dict. Note: Adapted from pyntcloud under MIT license\nParameters: filename: of ply file\nReturns: A dictionary with points, mesh, and/or comments keys.*\n\nfilename = 'test/PC_315967795019746000.ply'\ndata = read_ply(filename)\npoints = data['points'] # a dataframe\ntest_eq(isinstance(points, pd.DataFrame), True)\ntest_eq(len(points), 86651)\ntest_eq(list(points.keys()), ['x', 'y', 'z', 'intensity', 'laser_number'])\n\nThe points and mesh (if available) are stores as Pandas data frames:\n\npoints\n\n\n\n\n\n\n\n\n\nx\ny\nz\nintensity\nlaser_number\n\n\n\n\n0\n0.840252\n-4.179139\n-0.372995\n7\n31\n\n\n1\n0.841528\n-19.292950\n1.258417\n3\n14\n\n\n2\n-0.977540\n-18.640507\n1.048261\n10\n16\n\n\n3\n0.850112\n-6.747608\n-0.302564\n11\n30\n\n\n4\n0.220231\n-9.098052\n-0.241492\n7\n29\n\n\n...\n...\n...\n...\n...\n...\n\n\n86646\n-2.113191\n11.552426\n-0.088612\n6\n2\n\n\n86647\n-2.798015\n11.700585\n0.378175\n3\n3\n\n\n86648\n-3.513429\n11.829712\n1.842977\n1\n17\n\n\n86649\n-1.930610\n9.389456\n-0.412726\n13\n1\n\n\n86650\n-2.121817\n11.598898\n1.680530\n1\n15\n\n\n\n\n86651 rows × 5 columns\n\n\n\n\nIf you just want the points from a LIDAR scan, we extract them like so:\n\nsource\n\n\n\n\n read_lidar_points (filename:str)\n\n*Read 3D points in LIDAR scan stored as a binary_little_endian .ply file.\nParameters: filename: of ply file\nReturns: A tuple (3,N) numpy array.*\n\nscan = read_lidar_points(filename)\ntest_eq(scan.shape, (3, 86651))",
+    "crumbs": [
+      "driving"
+    ]
+  },
+  {
+    "objectID": "driving.html#reading-lidar-scan-from-ply-file",
+    "href": "driving.html#reading-lidar-scan-from-ply-file",
+    "title": "driving",
+    "section": "",
+    "text": "source\n\n\n\n read_ply (filename:str)\n\n*Read a binary_little_endian .ply file and return data as a dict. Note: Adapted from pyntcloud under MIT license\nParameters: filename: of ply file\nReturns: A dictionary with points, mesh, and/or comments keys.*\n\nfilename = 'test/PC_315967795019746000.ply'\ndata = read_ply(filename)\npoints = data['points'] # a dataframe\ntest_eq(isinstance(points, pd.DataFrame), True)\ntest_eq(len(points), 86651)\ntest_eq(list(points.keys()), ['x', 'y', 'z', 'intensity', 'laser_number'])\n\nThe points and mesh (if available) are stores as Pandas data frames:\n\npoints\n\n\n\n\n\n\n\n\n\nx\ny\nz\nintensity\nlaser_number\n\n\n\n\n0\n0.840252\n-4.179139\n-0.372995\n7\n31\n\n\n1\n0.841528\n-19.292950\n1.258417\n3\n14\n\n\n2\n-0.977540\n-18.640507\n1.048261\n10\n16\n\n\n3\n0.850112\n-6.747608\n-0.302564\n11\n30\n\n\n4\n0.220231\n-9.098052\n-0.241492\n7\n29\n\n\n...\n...\n...\n...\n...\n...\n\n\n86646\n-2.113191\n11.552426\n-0.088612\n6\n2\n\n\n86647\n-2.798015\n11.700585\n0.378175\n3\n3\n\n\n86648\n-3.513429\n11.829712\n1.842977\n1\n17\n\n\n86649\n-1.930610\n9.389456\n-0.412726\n13\n1\n\n\n86650\n-2.121817\n11.598898\n1.680530\n1\n15\n\n\n\n\n86651 rows × 5 columns\n\n\n\n\nIf you just want the points from a LIDAR scan, we extract them like so:\n\nsource\n\n\n\n\n read_lidar_points (filename:str)\n\n*Read 3D points in LIDAR scan stored as a binary_little_endian .ply file.\nParameters: filename: of ply file\nReturns: A tuple (3,N) numpy array.*\n\nscan = read_lidar_points(filename)\ntest_eq(scan.shape, (3, 86651))",
+    "crumbs": [
+      "driving"
+    ]
+  },
+  {
+    "objectID": "driving.html#visualizing-point-clouds",
+    "href": "driving.html#visualizing-point-clouds",
+    "title": "driving",
+    "section": "Visualizing Point Clouds",
+    "text": "Visualizing Point Clouds\nBased on code by 3630 TA Binit Shah in Spring 2021.\n\nsource\n\ncloud_layout\n\n cloud_layout (show_grid_lines:bool)\n\n*Create layout for showing clouds. Adapted from code by 3630 TAs Binit Shah and Jerred Chen\nParameters: show_grid_lines (bool): plots gridlines*\n\nsource\n\n\ncloud_data\n\n cloud_data (cloud:numpy.ndarray, fraction=None)\n\n*Return dictionary with x, y, z components. Adapted from code by 3630 TAs Binit Shah and Jerred Chen\nArgs: cloud (np.ndarray): point cloud, a (3, num_points) numpy array fraction (double): take only a fraction of the points*\n\nsource\n\n\nvisualize_cloud\n\n visualize_cloud (cloud:numpy.ndarray, show_grid_lines:bool=False,\n                  color:str='#90FF90', marker_size:int=1, fraction=None)\n\n*Visualizes point cloud in 3D scatter plot. Adapted from code by 3630 TAs Binit Shah and Jerred Chen\nArgs: cloud (np.ndarray): point cloud, a (3, num_points) numpy array show_grid_lines (bool): plots gridlines color (str): color for markers marker_size (int): size of each marker fraction (double): take only a fraction of the points*\n\nvisualize_cloud(scan, color='#F0E68C', fraction=0.2, show_grid_lines=True)\n\nUnable to display output for mime type(s): application/vnd.plotly.v1+json\n\n\n\nsource\n\n\nvisualize_clouds\n\n visualize_clouds (clouds:list, show_grid_lines:bool=False,\n                   cloud_colors=None, marker_size:int=1,\n                   do_subsampling:bool=True)\n\n*Visualizes cloud(s) in a iterative 3D plot. Adapted from code by 3630 TAs Binit Shah and Jerred Chen\nDue to browser limitations, rendering above 5 frames requires subsampling of the point clouds, which is done automatically.\nExample input of arg: clouds = [clouda, cloudb, cloudc] where each cloud is a numpy array of shape (3, num_points). cloud[0] are the x coordinates, cloud[1] is y, and cloud[2] is z.\nArgs: clouds (list): ordered series of point clouds show_grid_lines (bool): plots gridlines cloud_colors (list): colors for each cloud in the visualization marker_size (int): size of each marker do_subsampling (bool): whether or not subsampling occurs*\n\nscan2 = np.copy(scan)\nscan2[0] += 30\nvisualize_clouds([scan,scan2], show_grid_lines=True, do_subsampling=True)\n\nUnable to display output for mime type(s): application/vnd.plotly.v1+json\n\n\n\nsource\n\n\nanimation_layout\n\n animation_layout (clouds_labels:list, speed)\n\nSetup layout for animation. Adapted from code by 3630 TAs Binit Shah and Jerred Chen\n\nsource\n\n\nvisualize_clouds_animation\n\n visualize_clouds_animation (clouds_series:list, clouds_labels=None,\n                             show_grid_lines:bool=False, speed=100,\n                             cloud_colors=None, marker_size:int=1,\n                             do_subsampling:bool=True)\n\n*Visualizes a cloud(s) series using a slider & play/pause. Adapted from code by 3630 TAs Binit Shah and Jerred Chen\nDue to browser limitations, rendering above 5 frames requires subsampling of the point clouds, which is done automatically.\nExample input of arg: clouds_series = [[clouda, cloudb], [clouda, cloudb]] clouds_labels = [“iteration1”, “iteration2”]\nArgs: clouds_series (list): ordered series of point clouds clouds_labels (list): ordered labels for clouds show_grid_lines (bool): plots gridlines speed (int): speed at which the frames are played through cloud_colors (list): colors for each cloud in the visualization marker_size (int): size of each marker do_subsampling (bool): whether or not subsampling occurs*\n\nvisualize_clouds_animation([[scan], [scan2], [scan], [scan2]], show_grid_lines=True)\n\nUnable to display output for mime type(s): application/vnd.plotly.v1+json",
+    "crumbs": [
+      "driving"
+    ]
+  },
+  {
+    "objectID": "driving.html#a-very-nonlinear-planar-slam-example",
+    "href": "driving.html#a-very-nonlinear-planar-slam-example",
+    "title": "driving",
+    "section": "A very nonlinear planar SLAM example",
+    "text": "A very nonlinear planar SLAM example\nMostly for the GTSAM Examples book, although might also make it in driving chapter.\n\nsource\n\nplanar_example\n\n planar_example ()\n\nCreate a small but quite nonlinear planar SLAM example\n\ngraph, truth, keys = planar_example()\nshow(graph, truth, binary_edges=True)\n\n\n\n\n\n\n\n\n\nsource\n\n\nmarginals_figure\n\n marginals_figure (truth:gtsam.gtsam.Values,\n                   marginals:gtsam.gtsam.Marginals, keys:list)\n\nCreate a figure with the marginals for the planar example.\n\nmarginals = gtsam.Marginals(graph, truth)\n# This does not seem to work with all versions of matplotlib\n# marginals_figure(truth, marginals, keys)",
+    "crumbs": [
+      "driving"
+    ]
+  }
+]
