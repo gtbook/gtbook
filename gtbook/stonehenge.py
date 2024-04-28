@@ -167,7 +167,7 @@ def load_npz_from_url(url):
         print(f"Request failed: {e}")
         return None
 
-# %% ../stonehenge.ipynb 39
+# %% ../stonehenge.ipynb 40
 def download_rays(M=100, downsampling_factor=4):
     url = f'{URL}/training_rays-{M}-{downsampling_factor}.npz'
     return load_npz_from_url(url)

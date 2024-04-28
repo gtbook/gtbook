@@ -106,4 +106,5 @@ d = { 'settings': { 'branch': 'master',
                                                                                 'gtbook/stonehenge.py'),
                                    'gtbook.stonehenge.read_training_image': ( 'stonehenge.html#read_training_image',
                                                                               'gtbook/stonehenge.py')},
-            'gtbook.vacuum': {}}}
+            'gtbook.vacuum': { 'gtbook.vacuum.calculate_value_function': ('vacuum.html#calculate_value_function', 'gtbook/vacuum.py'),
+                               'gtbook.vacuum.calculate_value_system': ('vacuum.html#calculate_value_system', 'gtbook/vacuum.py')}}}
