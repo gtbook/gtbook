@@ -1,12 +1,14 @@
-# Conda environment file for CI and deployment
+# Shared conda environment for development, CI, and deployment.
+# After activation, install the package and nbdev tools with: pip install -e '.[dev]'
 name: nbdev2
 channels:
   - conda-forge
 dependencies:
-  - python=3.9
+  - python=3.13
+  - jupyter
   - python-graphviz
   - pandas
-  - plotly
+  - plotly>=5.24.1,<6
   - matplotlib
   - pillow # section 5.3 etc..
   - pytorch

@@ -22,13 +22,8 @@ jobs:
           auto-update-conda: false
           auto-activate-base: false
           activate-environment: nbdev2
-          python-version: 3.9
+          python-version: '3.13'
           environment-file: environment.yml
-
-      - name: Install nbdev
-        shell: bash -l {0}
-        run: |
-          pip install -U nbdev
 
       - name: Doing editable install
         shell: bash -l {0}
